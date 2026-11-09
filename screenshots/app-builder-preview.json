@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8080/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "Block Supply — Free UI blocks for Figma",
+      "hasCanvas": false,
+      "bodyTextLen": 4154,
+      "bodyTextHash": "7a13c24a84fb2b6866bdb652a6560cc497bb1d08e409cb5ee8f3bd0c197b7753",
+      "bodyTextPrefix": "Ctrl K Use for free ▾ No login required Editable UI Components A",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "Block Supply — Free UI blocks for Figma",
+      "hasCanvas": false,
+      "bodyTextLen": 4147,
+      "bodyTextHash": "0feecd7c92199e2a116e0a7ff051331214a021af71c440b29260556d5545eaf4",
+      "bodyTextPrefix": "Use for free ▾ No login required Editable UI Components A librar",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/app-builder-preview.json"
+}

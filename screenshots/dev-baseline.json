@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8080/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "Block Supply — Free UI components as SVG for Figma",
+      "hasCanvas": false,
+      "bodyTextLen": 4339,
+      "bodyTextHash": "f0e92bf074526ea308adfecb0a0d0fada816920399ec95cf9a0c9ce17d819e17",
+      "bodyTextPrefix": "Blocks Voice Forms Layout Free Ctrl K Use for free ▾ No login re",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "Block Supply — Free UI components as SVG for Figma",
+      "hasCanvas": false,
+      "bodyTextLen": 4286,
+      "bodyTextHash": "53b1081c63e6ae431ca25ff324694e4301dca0e2df5b9da8ecd788fd8b32aa5b",
+      "bodyTextPrefix": "No login required Editable UI Components A library of editable U",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/app-builder-preview.json"
+}
