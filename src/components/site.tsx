@@ -189,7 +189,9 @@ export function Site() {
     });
   }, [query, group, cat, onlySaved, saved]);
 
-  const packed = useMemo(() => pack(filtered, cols), [filtered, cols]);
+  // Sections are wide layouts, so they get at most two columns; a search mixes groups and keeps the usual grid.
+  const wallCols = group === "Sections" && !query.trim() ? Math.min(cols, 2) : cols;
+  const packed = useMemo(() => pack(filtered, wallCols), [filtered, wallCols]);
 
   function goLibrary(next?: Category | null) {
     setView("library");
