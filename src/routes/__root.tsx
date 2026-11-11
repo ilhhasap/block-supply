@@ -1,6 +1,8 @@
 import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import { AuthProvider } from "@/lib/auth/provider";
 import appCss from "../styles.css?url";
+import geist400 from "@fontsource/geist/files/geist-latin-400-normal.woff2?url";
+import geist500 from "@fontsource/geist/files/geist-latin-500-normal.woff2?url";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -11,7 +13,7 @@ export const Route = createRootRoute({
       {
         name: "description",
         content:
-          "A library of UI blocks. Copy a component and paste it into Figma as auto layout, set in Geist. Three copies are free, then log in.",
+          "A library of UI blocks. Copy a component and paste it into Figma as auto layout, set in Geist. Three copies are free, then log in to keep copying.",
       },
       { name: "theme-color", content: "#ffffff" },
       { property: "og:title", content: "Block Supply — Free UI blocks for Figma" },
@@ -22,6 +24,8 @@ export const Route = createRootRoute({
     ],
     links: [
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
+      { rel: "preload", as: "font", type: "font/woff2", href: geist400, crossOrigin: "anonymous" },
+      { rel: "preload", as: "font", type: "font/woff2", href: geist500, crossOrigin: "anonymous" },
       { rel: "stylesheet", href: appCss },
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
     ],

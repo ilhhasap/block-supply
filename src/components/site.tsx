@@ -1,14 +1,28 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { BLOCKS, CATEGORIES, type Block, type Category } from "@/data/blocks";
+import { BLOCKS, GROUPS, GROUP_CATEGORIES, groupOf, type Block, type Category, type Group } from "@/data/blocks";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
-import { UserButton } from "@/lib/auth/gates";
+import { authEnabled, signOut } from "@/lib/auth/client";
 import { releaseCopy, reserveCopy } from "@/lib/copy-gate";
-import { BlockView } from "@/components/kits";
+import { FREE_COPIES } from "@/lib/copy-limit";
+import { listSavedBlocks, mergeSavedBlocks, setSavedBlock } from "@/lib/saved";
+import { BlockView } from "@/components/block-view";
 import { Editor } from "@/components/editor";
-import supplyMark from "@/components/supply-mark.svg";
+import { Footer } from "@/components/footer";
 
 type View = "library" | "free";
+
+const LOCAL_SAVED = "block-supply-saved";
+const TOAST_TEXT: Record<string, string> = {
+  "Couldn’t copy": "Couldn’t copy",
+  "Link copied": "Link copied",
+  "Log in": "Log in to keep copying",
+  Saved: "Saved to your list",
+  "Welcome back": "You’re in. Copy it again",
+  "Couldn’t save": "Couldn’t save, try again",
+};
+const PENDING_SAVE = "supply-pending-save";
+const PENDING_COPY = "supply-pending-copy";
 
 function Logo({ size = 32 }: { size?: number }) {
   return (
@@ -43,7 +57,16 @@ function pack(items: Block[], n: number) {
 async function copyBlock(block: Block, kit: HTMLElement) {
   try {
     const { generateFromElement, inlineComputedStyles } = await import("@magicpatterns/html-to-figma");
-    const inlined = inlineComputedStyles(kit);
+    // A block shown scaled down is copied at its real size.
+    const fit = kit.closest<HTMLElement>("[data-fit-inner]");
+    const scaleBefore = fit?.style.transform ?? "";
+    if (fit) fit.style.transform = "none";
+    let inlined: string;
+    try {
+      inlined = inlineComputedStyles(kit);
+    } finally {
+      if (fit) fit.style.transform = scaleBefore;
+    }
     const clone = new DOMParser().parseFromString(inlined, "text/html").body.firstElementChild;
     if (!clone) throw new Error("empty frame");
     const html = await generateFromElement(clone, { topLayerName: block.name });
@@ -63,11 +86,11 @@ async function copyBlock(block: Block, kit: HTMLElement) {
 export function Site() {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
+  const [group, setGroup] = useState<Group>("Components");
   const [cat, setCat] = useState<Category | null>(null);
   const [view, setView] = useState<View>("library");
   const [cols, setCols] = useState(3);
   const [saved, setSaved] = useState<string[]>([]);
-  const [menu, setMenu] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -75,6 +98,15 @@ export function Site() {
   const [editing, setEditing] = useState<string | null>(null);
   const findRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { user: currentUser, isPending: authPending } = useCurrentUserState();
+  const [showTop, setShowTop] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  // The navbar tucks away while the page scrolls down and returns when scrolling stops or reverses.
+  const [navHidden, setNavHidden] = useState(false);
+  const lastTop = useRef(0);
+  const idleTimer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(idleTimer.current), []);
+  const [gate, setGate] = useState<"save" | "copy" | null>(null);
 
   useEffect(() => {
     const sync = () => setCols(columnsFor(window.innerWidth));
@@ -83,14 +115,55 @@ export function Site() {
     return () => window.removeEventListener("resize", sync);
   }, []);
 
+  // Saved blocks live on the account. When a visitor is signed in, pull their list, folding in
+  // anything saved in this browser before (or the block they tried to save when asked to log in).
+  const userId = currentUser?.id ?? null;
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem("block-supply-saved");
-      if (raw) setSaved(JSON.parse(raw) as string[]);
-    } catch {
-      /* ignore */
+    if (authPending) return;
+    if (!userId) {
+      setSaved([]);
+      setOnlySaved(false);
+      return;
     }
-  }, []);
+    let cancelled = false;
+    void (async () => {
+      let local: string[] = [];
+      let pendingSave: string | null = null;
+      let copyRetry = false;
+      try {
+        const raw = localStorage.getItem(LOCAL_SAVED);
+        const parsed: unknown = raw ? JSON.parse(raw) : [];
+        if (Array.isArray(parsed)) local = parsed.filter((id): id is string => typeof id === "string");
+        pendingSave = window.sessionStorage.getItem(PENDING_SAVE);
+        copyRetry = window.sessionStorage.getItem(PENDING_COPY) === "1";
+      } catch {
+        /* storage unavailable */
+      }
+      const known = new Set(BLOCKS.map((block) => block.id));
+      const ids = [...local, ...(pendingSave ? [pendingSave] : [])].filter((id) => known.has(id));
+      try {
+        const list = ids.length ? await mergeSavedBlocks({ data: { ids } }) : await listSavedBlocks();
+        if (cancelled) return;
+        setSaved(list);
+        try {
+          localStorage.removeItem(LOCAL_SAVED);
+          window.sessionStorage.removeItem(PENDING_SAVE);
+          window.sessionStorage.removeItem(PENDING_COPY);
+        } catch {
+          /* storage unavailable */
+        }
+        if (pendingSave && list.includes(pendingSave)) setToast("Saved");
+        else if (copyRetry) setToast("Welcome back");
+      } catch {
+        if (cancelled) return;
+        setSaved(local);
+        setToast("Couldn’t save");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [authPending, userId]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -101,8 +174,8 @@ export function Site() {
         findRef.current?.select();
       }
       if (event.key === "Escape") {
-        setMenu(false);
         setEditing(null);
+        setGate(null);
       }
     };
     window.addEventListener("keydown", onKey);
@@ -118,6 +191,8 @@ export function Site() {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return BLOCKS.filter((block) => {
+      // A search looks through everything; otherwise only the chosen group.
+      if (!q && groupOf(block.cat) !== group) return false;
       if (cat && block.cat !== cat) return false;
       if (onlySaved && !saved.includes(block.id)) return false;
       if (!q) return true;
@@ -127,30 +202,55 @@ export function Site() {
         block.id.includes(q)
       );
     });
-  }, [query, cat, onlySaved, saved]);
+  }, [query, group, cat, onlySaved, saved]);
 
-  const packed = useMemo(() => pack(filtered, cols), [filtered, cols]);
+  // Sections are wide layouts, so they get at most two columns; a search mixes groups and keeps the usual grid.
+  // Nothing left to show in Saved (the last one was unsaved): go back to browsing everything.
+  useEffect(() => {
+    if (onlySaved && saved.length === 0) setOnlySaved(false);
+  }, [onlySaved, saved.length]);
+
+  const wallCols = group === "Sections" && !query.trim() ? Math.min(cols, 2) : cols;
+  const packed = useMemo(() => pack(filtered, wallCols), [filtered, wallCols]);
 
   function goLibrary(next?: Category | null) {
     setView("library");
     setCat(next ?? null);
-    setMenu(false);
+    if (next) setGroup(groupOf(next));
     scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function goFree() {
     setView("free");
     setCat(null);
-    setMenu(false);
     scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  /** Saving needs an account; signed-out visitors get the log-in prompt instead. */
+  function requestSave(id: string) {
+    if (!currentUser) {
+      if (!authPending) {
+        try {
+          window.sessionStorage.setItem(PENDING_SAVE, id);
+        } catch {
+          /* storage unavailable */
+        }
+        setGate("save");
+      }
+      return;
+    }
+    toggleSave(id);
+  }
+
   function toggleSave(id: string) {
-    setSaved((prev) => {
-      const next = prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id];
-      localStorage.setItem("block-supply-saved", JSON.stringify(next));
-      return next;
-    });
+    const on = !saved.includes(id);
+    setSaved((prev) => (on ? [...prev, id] : prev.filter((item) => item !== id)));
+    setSavedBlock({ data: { id, on } })
+      .then((list) => setSaved(list))
+      .catch(() => {
+        setSaved((prev) => (on ? prev.filter((item) => item !== id) : [...prev, id]));
+        setToast("Couldn’t save");
+      });
   }
 
   async function onCopy(block: Block, kit: HTMLElement | null) {
@@ -166,9 +266,7 @@ export function Site() {
     }
     if (!gate.ok) {
       setBusy(null);
-      window.sessionStorage.setItem("supply-copy-gate", "1");
-      setToast("Log in");
-      void navigate({ to: "/login" });
+      setGate("copy");
       return;
     }
     const ok = await copyBlock(block, kit);
@@ -201,11 +299,31 @@ export function Site() {
 
   return (
     <div className="app">
-      <header className="top">
+      <header className="top" data-scrolled={scrolled ? "true" : "false"} data-hidden={navHidden ? "true" : "false"}>
         <div className="lead">
           <button className="logo" type="button" aria-label="Block Supply home" onClick={() => goLibrary(null)}>
             <Logo />
           </button>
+          <nav className="groups" aria-label="Browse by group">
+            {GROUPS.map((name) => (
+              <button
+                key={name}
+                type="button"
+                className="group-tab"
+                data-on={view === "library" && group === name ? "true" : "false"}
+                aria-current={view === "library" && group === name ? "page" : undefined}
+                onClick={() => {
+                  setGroup(name);
+                  setCat(null);
+                  setOnlySaved(false);
+                  setQuery("");
+                  goLibrary(null);
+                }}
+              >
+                {name}
+              </button>
+            ))}
+          </nav>
         </div>
         <label className="find">
           <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
@@ -219,6 +337,7 @@ export function Site() {
             aria-label="Search blocks"
             onChange={(event) => {
               setQuery(event.target.value);
+              if (event.target.value) setCat(null);
               if (view !== "library") setView("library");
             }}
           />
@@ -236,81 +355,88 @@ export function Site() {
           )}
         </label>
         <div className="tools">
-          <span className="mark" title="Auto layout, Geist, ready for Figma" aria-hidden="true">
-            <svg width="16" height="16" viewBox="0 0 16 16">
-              <rect x="5.2" y="1.6" width="8" height="8" rx="1.6" fill="none" stroke="#fff" strokeWidth="1.4" />
-              <rect x="2.2" y="5.2" width="8" height="8" rx="1.6" fill="#17181A" stroke="#fff" strokeWidth="1.4" />
-            </svg>
-          </span>
-          <AuthSlot />
-          <button type="button" className="join" onClick={() => setMenu((open) => !open)} aria-expanded={menu}>
-            <span>Use for free</span>
-            <i />
-            <b aria-hidden="true">▾</b>
-          </button>
+          <AuthSlot
+            savedCount={saved.length}
+            onSaved={() => {
+              setOnlySaved(true);
+              setView("library");
+              scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+          />
+          {!currentUser && !authPending ? (
+            <button type="button" className="join" onClick={goFree}>
+              <span>Use for free</span>
+            </button>
+          ) : null}
         </div>
       </header>
 
-      {menu ? (
-        <div className="popover" role="menu">
-          <p className="hint">Three copies are free. After that, log in and keep pasting into Figma.</p>
-          <button type="button" onClick={() => goLibrary(null)}>
-            Browse all {BLOCKS.length} blocks
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setOnlySaved((on) => !on);
-              setView("library");
-              setMenu(false);
-            }}
-          >
-            {onlySaved ? "Show everything" : `Saved (${saved.length})`}
-          </button>
-          <button type="button" onClick={goFree}>
-            Why it’s free
-          </button>
-        </div>
-      ) : null}
-
-      <div className="scroll" ref={scrollRef}>
+      <div
+        className="scroll"
+        ref={scrollRef}
+        onScroll={(event) => {
+          const top = event.currentTarget.scrollTop;
+          setShowTop(top > 520);
+          setScrolled(top > 6);
+          const delta = top - lastTop.current;
+          lastTop.current = top;
+          if (top <= 24 || delta < -4) setNavHidden(false);
+          else if (delta > 4) setNavHidden(true);
+          window.clearTimeout(idleTimer.current);
+          idleTimer.current = window.setTimeout(() => setNavHidden(false), 220);
+        }}
+      >
         <div className="body">
           {view === "free" ? (
-            <FreePage onBrowse={() => goLibrary(null)} />
+            <FreePage onBrowse={() => goLibrary(null)} signedIn={Boolean(currentUser)} />
           ) : (
             <>
               <header className="hero">
                 <div className="hero-dots" aria-hidden="true" />
-                <span className="hero-pill">No login required</span>
+                <span className="hero-pill">
+                  {currentUser ? "Unlimited copies, free" : `${FREE_COPIES} free copies, then log in`}
+                </span>
                 <h1 className="hero-head">Editable UI Components</h1>
                 <p className="hero-sub">
                   A library of <b>editable UI blocks</b>. Copy one and paste it into Figma as{" "}
-                  <b>auto layout</b>, set in <b>Geist</b>.
+                  <b>auto layout</b>, play with <b>Geist</b>.
                 </p>
                 <button
                   type="button"
                   className="hero-join"
                   onClick={() => document.getElementById("library")?.scrollIntoView({ behavior: "smooth" })}
                 >
-                  Copy any block
+                  Explore blocks
                 </button>
               </header>
 
               <div className="bar" role="toolbar" aria-label="Filter by kind">
-                {CATEGORIES.map((name) => (
+                {GROUP_CATEGORIES[group].map((name) => (
                   <button
                     key={name}
                     type="button"
                     className="chip"
                     data-on={cat === name ? "true" : "false"}
-                    onClick={() => setCat((curr) => (curr === name ? null : name))}
+                    onClick={() => {
+                      // Saved and a category are separate filters; picking a category leaves Saved.
+                      setOnlySaved(false);
+                      setCat((curr) => (curr === name ? null : name));
+                    }}
                   >
                     {name}
                   </button>
                 ))}
-                {onlySaved ? (
-                  <button type="button" className="chip" data-on="true" onClick={() => setOnlySaved(false)}>
-                    Saved
+                {saved.length > 0 || onlySaved ? (
+                  <button
+                    type="button"
+                    className="chip"
+                    data-on={onlySaved ? "true" : "false"}
+                    onClick={() => {
+                      setCat(null);
+                      setOnlySaved((on) => !on);
+                    }}
+                  >
+                    Saved ({saved.length})
                   </button>
                 ) : null}
               </div>
@@ -339,7 +465,12 @@ export function Site() {
                           className="card"
                           id={`block-${block.id}`}
                           style={{ ["--h" as string]: `${block.h}px` }}
-                          onClick={() => setEditing(block.id)}
+                          onClick={(event) => {
+                            // Clicks on a live control interact with it; clicks elsewhere open the editor.
+                            const target = event.target as HTMLElement;
+                            if (target.closest(".ix, [contenteditable], [role=slider], [role=textbox]")) return;
+                            setEditing(block.id);
+                          }}
                         >
                           {block.badge ? <span className="badge">{block.badge}</span> : null}
                           <button
@@ -349,7 +480,7 @@ export function Site() {
                             aria-label={saved.includes(block.id) ? `Unsave ${block.name}` : `Save ${block.name}`}
                             onClick={(event) => {
                               event.stopPropagation();
-                              toggleSave(block.id);
+                              requestSave(block.id);
                             }}
                           >
                             <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
@@ -400,9 +531,45 @@ export function Site() {
           busy={busy === editingBlock.id}
           copied={copied === editingBlock.id}
           onClose={() => setEditing(null)}
-          onSave={() => toggleSave(editingBlock.id)}
+          onSave={() => requestSave(editingBlock.id)}
           onCopy={(kit) => void onCopy(editingBlock, kit)}
           onShare={() => void onShare(editingBlock)}
+        />
+      ) : null}
+
+      <button
+        type="button"
+        className="to-top"
+        data-on={showTop ? "true" : "false"}
+        aria-label="Back to top"
+        tabIndex={showTop ? 0 : -1}
+        onClick={() => scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" })}
+      >
+        <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" fill="none">
+          <path d="M4 3h12M10 17V6.5M5.5 10.5 10 6l4.5 4.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+
+      {gate ? (
+        <LoginGate
+          title={gate === "copy" ? `You’ve used your\n${FREE_COPIES} free copies` : "Log in to save blocks"}
+          body={
+            gate === "copy"
+              ? "Log in to keep copying blocks into Figma. It stays free."
+              : "Bookmark the blocks you like and find them again anytime. It stays free."
+          }
+          onClose={() => setGate(null)}
+          onLogin={() => {
+            try {
+              if (gate === "copy") {
+                window.sessionStorage.setItem("supply-copy-gate", "1");
+                window.sessionStorage.setItem(PENDING_COPY, "1");
+              }
+            } catch {
+              /* storage unavailable */
+            }
+            void navigate({ to: "/login" });
+          }}
         />
       ) : null}
 
@@ -411,16 +578,35 @@ export function Site() {
           <circle cx="8" cy="8" r="7" fill="#17181A" />
           <path d="M5 8.2 7.1 10.2 11 6" fill="none" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" />
         </svg>
-        {toast === "Couldn’t copy"
-          ? "Couldn’t copy"
-          : toast === "Log in"
-            ? "Log in to keep copying"
-            : toast === "Link copied"
-              ? "Link copied"
-              : "Ready for Figma"}
+        {(toast && TOAST_TEXT[toast]) || "Ready for Figma"}
         <em>
-          {toast && toast !== "Couldn’t copy" && toast !== "Link copied" && toast !== "Log in" ? `· ${toast}` : ""}
+          {toast && !TOAST_TEXT[toast] ? `· ${toast}` : ""}
         </em>
+      </div>
+    </div>
+  );
+}
+
+function LoginGate({ title, body, onClose, onLogin }: { title: string; body: string; onClose: () => void; onLogin: () => void }) {
+  return (
+    <div
+      className="gate"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="gate-title"
+      onClick={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <div className="gate-body">
+        <h2 id="gate-title">{title}</h2>
+        <p>{body}</p>
+        <button type="button" className="gate-cta" onClick={onLogin} autoFocus>
+          <span>Log in</span>
+          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none">
+            <path d="M6 3.2 10.8 8 6 12.8" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
       </div>
     </div>
   );
@@ -443,11 +629,14 @@ function Questions() {
         </dd>
         <dt>What can I use the blocks for?</dt>
         <dd>
-          Anything you make: apps, sites, decks, and client work. No credit and no account. Don’t
+          Anything you make: apps, sites, decks, and client work. No credit required. Don’t
           resell the set unchanged as a kit of your own.
         </dd>
         <dt>Do I need to sign in?</dt>
-        <dd>No. Nothing is locked, metered, or waiting on a plan.</dd>
+        <dd>
+          Not for your first {FREE_COPIES} copies. After that, log in with your email to keep copying. It
+          stays free: there is no paid plan.
+        </dd>
         <dt>Will the text stay editable?</dt>
         <dd>
           Yes. Every label is a Geist text layer, not outlines, inside an auto-layout frame.
@@ -457,36 +646,61 @@ function Questions() {
   );
 }
 
-function FreePage({ onBrowse }: { onBrowse: () => void }) {
+function FreePage({ onBrowse, signedIn }: { onBrowse: () => void; signedIn: boolean }) {
+  const steps: [string, string, string][] = [
+    ["1", "Copy a block", `Press Copy Figma on any block. The first ${FREE_COPIES} copies need no account.`],
+    ["2", "Log in, it’s free", `After ${FREE_COPIES} copies, log in with your email or Google to keep going. There is nothing to pay.`],
+    ["3", "Paste into Figma", "You get a real auto layout frame with live Geist text, ready to edit."],
+  ];
   return (
     <>
       <header className="hero free-hero">
         <div className="hero-dots" aria-hidden="true" />
-        <span className="hero-pill">$0 · no account</span>
-        <h1 className="hero-head">Everything is free</h1>
+        <span className="hero-pill">{signedIn ? "You’re logged in · unlimited copies" : `Free · ${FREE_COPIES} copies without an account`}</span>
+        <h1 className="hero-head">Free to use. Always.</h1>
         <p className="hero-sub">
-          The whole library copies as Figma frames. Paste a block and keep editing the auto layout.
+          Every block is free to copy into Figma. {signedIn ? "Your account is free too, so copy as much as you like." : `After ${FREE_COPIES} copies, log in with a free account to keep copying.`}
         </p>
-        <button type="button" className="hero-join" onClick={onBrowse}>
-          Copy any block
-        </button>
+        <div className="free-cta">
+          <button type="button" className="hero-join" onClick={onBrowse}>
+            Browse the blocks
+          </button>
+          {signedIn ? null : (
+            <Link to="/login" className="free-ghost">
+              Create a free account
+            </Link>
+          )}
+        </div>
       </header>
+
+      <ol className="steps" aria-label="How it works">
+        {steps.map(([n, title, text]) => (
+          <li key={n}>
+            <span className="step-n" aria-hidden="true">
+              {n}
+            </span>
+            <strong>{title}</strong>
+            <p>{text}</p>
+          </li>
+        ))}
+      </ol>
+
       <div className="plans">
         <article className="plan" data-on="true">
-          <h3>Free</h3>
+          <h3>Free plan</h3>
           <strong>$0</strong>
-          <p>Forever. The only plan.</p>
+          <p>No card, no trial. This is the only plan.</p>
           <ul>
             <li>All {BLOCKS.length} blocks</li>
-            <li>Auto layout on every block</li>
-            <li>Geist on every text layer</li>
-            <li>No login</li>
+            <li>Unlimited copies with a free account</li>
+            <li>{FREE_COPIES} copies without an account</li>
+            <li>Save blocks to your account</li>
           </ul>
         </article>
         <article className="plan">
-          <h3>What paste keeps</h3>
-          <strong>Frame</strong>
-          <p>Figma reads the paste as layers.</p>
+          <h3>What you get when you paste</h3>
+          <strong>A real frame</strong>
+          <p>Figma reads the paste as layers you can edit.</p>
           <ul>
             <li>Auto layout rows and columns</li>
             <li>Padding, gap, and alignment</li>
@@ -495,13 +709,13 @@ function FreePage({ onBrowse }: { onBrowse: () => void }) {
           </ul>
         </article>
         <article className="plan">
-          <h3>What it isn’t</h3>
-          <strong>Pro</strong>
-          <p>There isn’t a paid tier hiding the rest.</p>
+          <h3>What is not here</h3>
+          <strong>No paid tier</strong>
+          <p>Nothing is locked behind a subscription.</p>
           <ul>
             <li>No trial</li>
             <li>No watermark</li>
-            <li>No download cap</li>
+            <li>No download limit</li>
             <li>No seat license</li>
           </ul>
         </article>
@@ -511,50 +725,86 @@ function FreePage({ onBrowse }: { onBrowse: () => void }) {
   );
 }
 
-function AuthSlot() {
+function AuthSlot({ savedCount, onSaved }: { savedCount: number; onSaved: () => void }) {
   const { user, isPending } = useCurrentUserState();
+  const [open, setOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const close = (event: MouseEvent | KeyboardEvent) => {
+      if (event instanceof KeyboardEvent) {
+        if (event.key === "Escape") setOpen(false);
+        return;
+      }
+      if (rootRef.current && !rootRef.current.contains(event.target as Node)) setOpen(false);
+    };
+    window.addEventListener("mousedown", close);
+    window.addEventListener("keydown", close);
+    return () => {
+      window.removeEventListener("mousedown", close);
+      window.removeEventListener("keydown", close);
+    };
+  }, [open]);
+
   if (isPending) return <span className="auth-skel" aria-hidden="true" />;
-  if (user) {
+  if (!user) {
     return (
-      <span className="auth-slot">
-        <UserButton />
-      </span>
+      <Link to="/login" className="login-link">
+        Log in
+      </Link>
     );
   }
+  const label = user.displayName ?? user.primaryEmail ?? "Account";
   return (
-    <Link to="/login" className="login-link">
-      Log in
-    </Link>
+    <div className="acct" ref={rootRef}>
+      <button
+        type="button"
+        className="acct-btn"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={`Account menu for ${label}`}
+        onClick={() => setOpen((on) => !on)}
+      >
+        {user.profileImageUrl ? (
+          <img src={user.profileImageUrl} alt="" referrerPolicy="no-referrer" />
+        ) : (
+          <span>{label.charAt(0).toUpperCase()}</span>
+        )}
+      </button>
+      {open ? (
+        <div className="acct-menu" role="menu">
+          <div className="acct-who">
+            <b>{label}</b>
+            {user.primaryEmail && user.primaryEmail !== label ? <small>{user.primaryEmail}</small> : null}
+          </div>
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              setOpen(false);
+              onSaved();
+            }}
+          >
+            Saved ({savedCount})
+          </button>
+          {authEnabled ? (
+            <button
+              type="button"
+              role="menuitem"
+              disabled={signingOut}
+              onClick={() => {
+                setSigningOut(true);
+                void signOut().catch(() => setSigningOut(false));
+              }}
+            >
+              {signingOut ? "Signing out…" : "Sign out"}
+            </button>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
   );
 }
 
-function Footer() {
-  return (
-    <footer className="supply">
-      <div className="supply-top">
-        <h2>
-          Let’s start
-          <br />
-          from nothin’
-        </h2>
-        <nav className="supply-links" aria-label="Social">
-          <a href="https://www.linkedin.com" target="_blank" rel="noreferrer">
-            LinkedIn
-          </a>
-          <a href="https://www.instagram.com" target="_blank" rel="noreferrer">
-            Instagram
-          </a>
-          <a href="https://www.behance.net" target="_blank" rel="noreferrer">
-            Behance
-          </a>
-        </nav>
-      </div>
-      <img className="supply-mark" src={supplyMark} alt="Supply" />
-      <div className="supply-meta">
-        <span>©{new Date().getFullYear()} — Founded by Sara Guedj</span>
-        <span>Visuals by Guillaume Perrette</span>
-        <span>Site by Pierre Patrault & Thomas Carré</span>
-      </div>
-    </footer>
-  );
-}

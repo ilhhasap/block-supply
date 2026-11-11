@@ -11,7 +11,10 @@
  *   DATABASE_URL         Postgres connection string (omit locally -> PGLite)
  *   GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET   optional
  *   GITHUB_CLIENT_ID / GITHUB_CLIENT_SECRET   optional
+ *   RESEND_API_KEY / EMAIL_FROM   enable verification emails (see `email.server.ts`);
+ *                        when set, sign-in requires a verified email
  *   VITE_AUTH_PROVIDERS  which social buttons to show, e.g. "google,github"
+ *   AUTH_RATE_LIMIT      "on" to enforce the login rate limits outside production (always on in production)
  *   VITE_AUTH_ENABLED    "false" turns auth off (shared dev user)
  *
  * NEVER import this from client code. The client uses `@/lib/auth/client`;
@@ -24,6 +27,7 @@ import { randomBytes } from "node:crypto";
 import { Pool } from "pg";
 import { ensureDbReady, getPglite } from "../db";
 import { emailAndPasswordEnabled } from "./email-password";
+import { emailConfigured, resetPasswordEmail, sendEmail, verificationEmail } from "./email.server";
 import { pgliteDialect } from "./pglite-dialect";
 
 // Kick (and share) PGLite bootstrap as soon as the auth server module loads.
@@ -36,6 +40,9 @@ const env = (key: string): string | undefined => {
 };
 
 const isProduction = process.env.NODE_ENV === "production";
+if (isProduction && !emailConfigured) {
+  console.error("[auth] RESEND_API_KEY is not set — email verification is NOT enforced.");
+}
 
 /**
  * Dev secret must outlive module reloads (HMR) or every session dies mid-dev,
@@ -46,7 +53,8 @@ function authSecret(): string {
   const configured = env("BETTER_AUTH_SECRET");
   if (configured) return configured;
   if (isProduction) {
-    console.error("[auth] BETTER_AUTH_SECRET is not set — sessions will not survive restarts.");
+    // A per-instance random secret breaks sessions on serverless and is not a safe default.
+    throw new Error("[auth] BETTER_AUTH_SECRET is required in production.");
   }
   globalAuthRef.__authDevSecret__ ??= randomBytes(32).toString("hex");
   return globalAuthRef.__authDevSecret__;
@@ -100,10 +108,50 @@ export const auth = betterAuth({
   socialProviders,
   account: { encryptOAuthTokens: true },
 
+  // Throttle by client IP. The counters live in the database because serverless instances do not
+  // share memory, which made the in-memory default ineffective. On in production; set
+  // AUTH_RATE_LIMIT=on to try it locally.
+  rateLimit: {
+    enabled: isProduction || env("AUTH_RATE_LIMIT") === "on",
+    storage: "database",
+    window: 60,
+    max: 120,
+    customRules: {
+      "/sign-in/email": { window: 300, max: 10 },
+      "/sign-up/email": { window: 3600, max: 8 },
+      "/request-password-reset": { window: 3600, max: 5 },
+      "/send-verification-email": { window: 3600, max: 5 },
+      "/reset-password": { window: 3600, max: 10 },
+    },
+  },
+
   // Cache the session in a short-lived signed cookie so reads skip the DB.
   session: { cookieCache: { enabled: true, maxAge: 300 } },
 
-  ...(emailAndPasswordEnabled ? { emailAndPassword: { enabled: true } } : {}),
+  // With an email provider configured, accounts must verify their address
+  // before signing in. Without one (local dev) the link is logged instead and
+  // verification is not enforced, so nobody gets locked out.
+  ...(emailAndPasswordEnabled
+    ? {
+        emailAndPassword: {
+          enabled: true,
+          requireEmailVerification: emailConfigured,
+          resetPasswordTokenExpiresIn: 60 * 60,
+          revokeSessionsOnPasswordReset: true,
+          sendResetPassword: async ({ user, url }) => {
+            await sendEmail({ to: user.email, ...resetPasswordEmail(url) });
+          },
+        },
+      }
+    : {}),
+  emailVerification: {
+    sendOnSignUp: true,
+    sendOnSignIn: emailConfigured,
+    autoSignInAfterVerification: true,
+    sendVerificationEmail: async ({ user, url }) => {
+      await sendEmail({ to: user.email, ...verificationEmail(url) });
+    },
+  },
 
   advanced: { cookiePrefix: "supply-auth" },
 
