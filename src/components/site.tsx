@@ -101,6 +101,11 @@ export function Site() {
   const { user: currentUser, isPending: authPending } = useCurrentUserState();
   const [showTop, setShowTop] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  // The navbar tucks away while the page scrolls down and returns when scrolling stops or reverses.
+  const [navHidden, setNavHidden] = useState(false);
+  const lastTop = useRef(0);
+  const idleTimer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(idleTimer.current), []);
   const [gate, setGate] = useState<"save" | "copy" | null>(null);
 
   useEffect(() => {
@@ -294,7 +299,7 @@ export function Site() {
 
   return (
     <div className="app">
-      <header className="top" data-scrolled={scrolled ? "true" : "false"}>
+      <header className="top" data-scrolled={scrolled ? "true" : "false"} data-hidden={navHidden ? "true" : "false"}>
         <div className="lead">
           <button className="logo" type="button" aria-label="Block Supply home" onClick={() => goLibrary(null)}>
             <Logo />
@@ -373,6 +378,12 @@ export function Site() {
           const top = event.currentTarget.scrollTop;
           setShowTop(top > 520);
           setScrolled(top > 6);
+          const delta = top - lastTop.current;
+          lastTop.current = top;
+          if (top <= 24 || delta < -4) setNavHidden(false);
+          else if (delta > 4) setNavHidden(true);
+          window.clearTimeout(idleTimer.current);
+          idleTimer.current = window.setTimeout(() => setNavHidden(false), 220);
         }}
       >
         <div className="body">
