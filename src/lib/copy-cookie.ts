@@ -4,7 +4,7 @@ import { FREE_COPIES } from "@/lib/copy-limit";
 const PREFIX = "v1";
 
 export function copyCookieSecret() {
-  return process.env.BETTER_AUTH_SECRET || process.env.GROK_AUTH_SECRET || "supply-copy-gate-v1";
+  return process.env.BETTER_AUTH_SECRET || "supply-copy-gate-v1";
 }
 
 export function sealCopyCount(count: number, secret = copyCookieSecret()) {

@@ -1,7 +1,7 @@
 #!/bin/sh
+# Start the dev server in the background if it is not already up.
 set -eu
-cd /workspace
-node scripts/preview.mjs stop || true
+cd "$(dirname "$0")"
 if curl -sf -o /dev/null --max-time 2 http://127.0.0.1:8080/; then
   exit 0
 fi

@@ -1,6 +1,6 @@
 import { createFileRoute, Navigate, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
-import { authClient, authEnabled, GROK_PROVIDERS, signIn } from "@/lib/auth/client";
+import { authClient, authEnabled, AUTH_PROVIDERS, signIn } from "@/lib/auth/client";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 
 export const Route = createFileRoute("/login")({
@@ -69,19 +69,19 @@ function LoginPage() {
 
           {authEnabled ? (
             <form onSubmit={onSubmit}>
-              {GROK_PROVIDERS.map((provider) => (
+              {AUTH_PROVIDERS.map((provider) => (
                 <button
-                  key={provider.providerId}
+                  key={provider.id}
                   type="button"
-                  className={provider.idp === "twitter" ? "login-x" : "login-google"}
+                  className={provider.id === "github" ? "login-x" : "login-google"}
                   onClick={() => {
                     setError("");
-                    void signIn(provider.providerId, { callbackURL: "/" }).catch((err: unknown) => {
+                    void signIn(provider.id, { callbackURL: "/" }).catch((err: unknown) => {
                       setError(err instanceof Error ? err.message : "Could not sign in.");
                     });
                   }}
                 >
-                  {provider.idp === "twitter" ? <XMark /> : <GoogleMark />}
+                  {provider.id === "github" ? <GithubMark /> : <GoogleMark />}
                   <span>Continue with {provider.label}</span>
                 </button>
               ))}
@@ -157,12 +157,12 @@ function GoogleMark() {
   );
 }
 
-function XMark() {
+function GithubMark() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
       <path
         fill="currentColor"
-        d="M12.2 1.5h2.1L9.6 6.9l5.5 7.6h-4.3L7.7 9.9l-3.6 4.6H2l5.1-5.8L1.8 1.5h4.4l3.1 4.3 2.9-4.3Zm-.7 11.8h1.2L4.6 2.7H3.3l8.2 10.6Z"
+        d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.05-.49.05-.49.8.06 1.23.83 1.23.83.71 1.22 1.87.87 2.33.66.07-.52.28-.87.5-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8Z"
       />
     </svg>
   );
