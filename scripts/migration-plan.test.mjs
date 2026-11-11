@@ -61,11 +61,11 @@ test("non-.sql entries are dropped (readdir also yields the auth/ directory)", (
 
 test("the auth schema source ships outside the globbed directory", () => {
   const migrationsDir = join(projectRoot(), "migrations");
-  // Auth is on, so the copied-up schema is the only top-level migration.
-  const expected = authSchemaCopy(projectRoot()) === null ? [] : [AUTH_MIGRATION];
+  // Every top-level .sql file is a migration; the auth/ directory is not.
+  const files = readdirSync(migrationsDir).filter((f) => f.endsWith(".sql"));
   assert.deepEqual(
-    pendingMigrations(readdirSync(migrationsDir), []).map((m) => m.name),
-    expected,
+    pendingMigrations(readdirSync(migrationsDir), []).map((m) => m.path).sort(),
+    files.sort(),
   );
   assert.ok(readdirSync(join(migrationsDir, "auth")).includes("0001_auth.sql"));
 });

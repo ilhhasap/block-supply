@@ -4,6 +4,7 @@ import { BLOCKS, CATEGORIES, type Block, type Category } from "@/data/blocks";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { UserButton } from "@/lib/auth/gates";
 import { releaseCopy, reserveCopy } from "@/lib/copy-gate";
+import { FREE_COPIES } from "@/lib/copy-limit";
 import { BlockView } from "@/components/kits";
 import { Editor } from "@/components/editor";
 import supplyMark from "@/components/supply-mark.svg";
@@ -253,7 +254,10 @@ export function Site() {
 
       {menu ? (
         <div className="popover" role="menu">
-          <p className="hint">Three copies are free. After that, log in and keep pasting into Figma.</p>
+          <p className="hint">
+            {FREE_COPIES} copies are free without an account. After that, log in (it stays free) and keep pasting
+            into Figma.
+          </p>
           <button type="button" onClick={() => goLibrary(null)}>
             Browse all {BLOCKS.length} blocks
           </button>
@@ -281,7 +285,7 @@ export function Site() {
             <>
               <header className="hero">
                 <div className="hero-dots" aria-hidden="true" />
-                <span className="hero-pill">No login required</span>
+                <span className="hero-pill">{FREE_COPIES} free copies, then log in</span>
                 <h1 className="hero-head">Editable UI Components</h1>
                 <p className="hero-sub">
                   A library of <b>editable UI blocks</b>. Copy one and paste it into Figma as{" "}
@@ -443,11 +447,14 @@ function Questions() {
         </dd>
         <dt>What can I use the blocks for?</dt>
         <dd>
-          Anything you make: apps, sites, decks, and client work. No credit and no account. Don’t
+          Anything you make: apps, sites, decks, and client work. No credit required. Don’t
           resell the set unchanged as a kit of your own.
         </dd>
         <dt>Do I need to sign in?</dt>
-        <dd>No. Nothing is locked, metered, or waiting on a plan.</dd>
+        <dd>
+          Not for your first {FREE_COPIES} copies. After that, log in with your email to keep copying. It
+          stays free: there is no paid plan.
+        </dd>
         <dt>Will the text stay editable?</dt>
         <dd>
           Yes. Every label is a Geist text layer, not outlines, inside an auto-layout frame.
@@ -462,7 +469,7 @@ function FreePage({ onBrowse }: { onBrowse: () => void }) {
     <>
       <header className="hero free-hero">
         <div className="hero-dots" aria-hidden="true" />
-        <span className="hero-pill">$0 · no account</span>
+        <span className="hero-pill">$0 · {FREE_COPIES} copies, then a free account</span>
         <h1 className="hero-head">Everything is free</h1>
         <p className="hero-sub">
           The whole library copies as Figma frames. Paste a block and keep editing the auto layout.
@@ -480,7 +487,7 @@ function FreePage({ onBrowse }: { onBrowse: () => void }) {
             <li>All {BLOCKS.length} blocks</li>
             <li>Auto layout on every block</li>
             <li>Geist on every text layer</li>
-            <li>No login</li>
+            <li>{FREE_COPIES} copies without an account</li>
           </ul>
         </article>
         <article className="plan">
