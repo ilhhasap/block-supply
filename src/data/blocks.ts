@@ -20,6 +20,8 @@ export type Block = {
   cat: Category;
   h: number;
   badge?: "New";
+  /** Narrowest width (px) the block is laid out for; it is scaled down to fit below that. */
+  minW?: number;
 };
 
 /** Top-level groups shown in the navbar. */
@@ -67,7 +69,7 @@ export const BLOCKS: Block[] = [
   { id: "speech", name: "Speech input", cat: "Voice", h: 200 },
   { id: "shimmer", name: "Shimmer text", cat: "Voice", h: 200 },
   { id: "scrub", name: "Scrub bar", cat: "Voice", h: 180 },
-  { id: "alert", name: "Alert", cat: "Overlay", h: 220 },
+  { id: "alert", name: "Alert", cat: "Overlay", h: 220, minW: 400 },
   { id: "toast", name: "Toast", cat: "Overlay", h: 180 },
   { id: "tooltip", name: "Tooltip", cat: "Overlay", h: 260 },
   { id: "dropdown", name: "Dropdown", cat: "Overlay", h: 400 },
@@ -86,7 +88,7 @@ export const BLOCKS: Block[] = [
   { id: "keyboard", name: "Keyboard", cat: "Data", h: 180 },
   { id: "upload", name: "Upload", cat: "Input", h: 320 },
   { id: "skeleton", name: "Skeleton", cat: "Status", h: 260 },
-  { id: "notice", name: "Inline notice", cat: "Status", h: 200 },
+  { id: "notice", name: "Inline notice", cat: "Status", h: 200, minW: 360 },
   { id: "link-button", name: "Link button", cat: "Button", h: 200 },
   { id: "danger-button", name: "Danger buttons", cat: "Button", h: 200 },
   { id: "loading-button", name: "Loading button", cat: "Button", h: 200 },
@@ -111,7 +113,7 @@ export const BLOCKS: Block[] = [
   { id: "login-form", name: "Login form", cat: "Form", h: 480, badge: "New" },
   { id: "signup-form", name: "Sign-up form", cat: "Form", h: 500 },
   { id: "contact-form", name: "Contact form", cat: "Form", h: 520 },
-  { id: "newsletter", name: "Newsletter", cat: "Form", h: 300 },
+  { id: "newsletter", name: "Newsletter", cat: "Form", h: 300, minW: 360 },
   { id: "hero", name: "Hero", cat: "Hero", h: 380, badge: "New" },
   { id: "feature-grid", name: "Feature grid", cat: "Features", h: 260 },
   { id: "cta-banner", name: "CTA banner", cat: "CTA", h: 240 },
