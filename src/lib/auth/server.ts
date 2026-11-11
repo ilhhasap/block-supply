@@ -14,6 +14,7 @@
  *   RESEND_API_KEY / EMAIL_FROM   enable verification emails (see `email.server.ts`);
  *                        when set, sign-in requires a verified email
  *   VITE_AUTH_PROVIDERS  which social buttons to show, e.g. "google,github"
+ *   AUTH_RATE_LIMIT      "on" to enforce the login rate limits outside production (always on in production)
  *   VITE_AUTH_ENABLED    "false" turns auth off (shared dev user)
  *
  * NEVER import this from client code. The client uses `@/lib/auth/client`;
@@ -106,6 +107,23 @@ export const auth = betterAuth({
   trustedOrigins,
   socialProviders,
   account: { encryptOAuthTokens: true },
+
+  // Throttle by client IP. The counters live in the database because serverless instances do not
+  // share memory, which made the in-memory default ineffective. On in production; set
+  // AUTH_RATE_LIMIT=on to try it locally.
+  rateLimit: {
+    enabled: isProduction || env("AUTH_RATE_LIMIT") === "on",
+    storage: "database",
+    window: 60,
+    max: 120,
+    customRules: {
+      "/sign-in/email": { window: 300, max: 10 },
+      "/sign-up/email": { window: 3600, max: 8 },
+      "/request-password-reset": { window: 3600, max: 5 },
+      "/send-verification-email": { window: 3600, max: 5 },
+      "/reset-password": { window: 3600, max: 10 },
+    },
+  },
 
   // Cache the session in a short-lived signed cookie so reads skip the DB.
   session: { cookieCache: { enabled: true, maxAge: 300 } },
