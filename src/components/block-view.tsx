@@ -8,7 +8,7 @@ import { BLOCKS } from "@/data/blocks";
  * laid out for, `minW`) is drawn at that width and scaled down, so nothing is clipped or overlaps.
  * Copy to Figma lifts the scale first (see `copyBlock`), so the copied frame keeps its real size.
  */
-function Fit({ minW, children }: { minW?: number; children: ReactNode }) {
+function Fit({ minW, noShadow, children }: { minW?: number; noShadow?: boolean; children: ReactNode }) {
   const outer = useRef<HTMLDivElement>(null);
   const inner = useRef<HTMLDivElement>(null);
   const [fit, setFit] = useState({ scale: 1, width: 0, height: 0 });
@@ -38,7 +38,7 @@ function Fit({ minW, children }: { minW?: number; children: ReactNode }) {
 
   const scaled = fit.scale < 1;
   return (
-    <div ref={outer} data-fit="" style={{ width: "100%", height: scaled ? fit.height : undefined }}>
+    <div ref={outer} data-fit="" data-noshadow={noShadow ? "" : undefined} style={{ width: "100%", height: scaled ? fit.height : undefined }}>
       <div
         ref={inner}
         data-fit-inner=""
@@ -60,9 +60,10 @@ function Fit({ minW, children }: { minW?: number; children: ReactNode }) {
 export function BlockView({ id }: { id: string }) {
   const View = LIVE[id] ?? VIEWS[id];
   if (!View) return null;
-  const minW = BLOCKS.find((block) => block.id === id)?.minW;
+  const block = BLOCKS.find((item) => item.id === id);
+  // Only cards carry a shadow; on every other block it is removed, on the page and in the copy.
   return (
-    <Fit minW={minW}>
+    <Fit minW={block?.minW} noShadow={block?.cat !== "Card"}>
       <View />
     </Fit>
   );

@@ -2213,3 +2213,9 @@ body {
   align-items: center;
   animation: none;
 }
+
+/* Only cards have a shadow. */
+[data-noshadow] .kit,
+[data-noshadow] .kit * {
+  box-shadow: none !important;
+}
