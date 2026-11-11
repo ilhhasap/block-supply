@@ -5,6 +5,8 @@ import { BlockView } from "@/components/block-view";
 type Tune = {
   fill: "light" | "dark";
   corner: number;
+  /** The block has no radius of its own; the corner slider moves the rounded parts inside it. */
+  nested: boolean;
   gap: number;
   shadow: number;
   opacity: number;
@@ -56,14 +58,32 @@ function shadowBlur(shadow: string) {
   return Math.round(px[2] ?? 0);
 }
 
+/** Rounded parts inside a block (inputs, menus, code boxes). Pills and circles are left alone. */
+function nestedRadii(kit: HTMLElement) {
+  const found: [HTMLElement, number][] = [];
+  for (const el of kit.querySelectorAll<HTMLElement>("*")) {
+    const raw = getComputedStyle(el).borderTopLeftRadius;
+    if (!raw.endsWith("px")) continue;
+    const radius = parseFloat(raw);
+    if (!(radius > 0)) continue;
+    if (radius >= Math.min(el.offsetWidth, el.offsetHeight) / 2 - 0.5) continue;
+    found.push([el, radius]);
+  }
+  return found;
+}
+
 function measure(kit: HTMLElement): Tune {
   const cs = getComputedStyle(kit);
-  const radius = Math.round(parseFloat(cs.borderTopLeftRadius) || 0);
+  let radius = Math.round(parseFloat(cs.borderTopLeftRadius) || 0);
+  const inner = nestedRadii(kit);
+  const nested = radius === 0 && inner.length > 0;
+  if (nested) radius = Math.round(Math.max(...inner.map(([, value]) => value)));
   const gapAttr = kit.getAttribute("data-gap");
   const gap = Math.round(gapAttr != null ? Number(gapAttr) : parseFloat(cs.gap) || 0);
   return {
     fill: "light",
     corner: radius,
+    nested,
     gap: Number.isFinite(gap) ? gap : 0,
     shadow: shadowBlur(cs.boxShadow),
     opacity: 100,
@@ -119,7 +139,11 @@ function retint(kit: HTMLElement) {
 function applyTune(kit: HTMLElement, edit: Tune, base: Tune) {
   const originalShadow = getComputedStyle(kit).boxShadow;
   if (edit.fill === "dark") retint(kit);
-  kit.style.borderRadius = `${edit.corner}px`;
+  // Parts inside the block move by the same amount the slider moved from where it started.
+  const inner = nestedRadii(kit);
+  const delta = edit.corner - base.corner;
+  for (const [el, radius] of inner) el.style.borderRadius = `${Math.max(0, Math.round(radius + delta))}px`;
+  if (!base.nested) kit.style.borderRadius = `${edit.corner}px`;
   kit.setAttribute("data-gap", String(edit.gap));
   if (edit.gap < 0) {
     kit.style.gap = "0px";
