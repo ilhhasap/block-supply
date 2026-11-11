@@ -1776,3 +1776,10 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Tablet: two columns leave little room, so the card padding is tighter than on desktop. */
+@media (width <= 1100px) {
+  .stage {
+    padding: 56px 28px;
+  }
+}

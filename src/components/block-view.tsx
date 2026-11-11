@@ -4,31 +4,35 @@ import { VIEWS } from "@/components/kits";
 import { BLOCKS } from "@/data/blocks";
 
 /**
- * Some blocks are laid out for a minimum width. When the space is narrower the block is drawn at
- * that width and scaled down to fit, instead of its text running into its neighbours. Copy to
- * Figma lifts the scale first (see `copyBlock`), so the copied frame keeps its real size.
+ * Fits a block into its card. A block wider than the room it has (or narrower than the width it is
+ * laid out for, `minW`) is drawn at that width and scaled down, so nothing is clipped or overlaps.
+ * Copy to Figma lifts the scale first (see `copyBlock`), so the copied frame keeps its real size.
  */
-function Fit({ minW, children }: { minW: number; children: ReactNode }) {
+function Fit({ minW, children }: { minW?: number; children: ReactNode }) {
   const outer = useRef<HTMLDivElement>(null);
   const inner = useRef<HTMLDivElement>(null);
-  const [fit, setFit] = useState({ scale: 1, height: 0 });
+  const [fit, setFit] = useState({ scale: 1, width: 0, height: 0 });
 
   useLayoutEffect(() => {
     const outerEl = outer.current;
     const innerEl = inner.current;
     if (!outerEl || !innerEl) return;
     const measure = () => {
+      const kit = innerEl.firstElementChild as HTMLElement | null;
       const avail = outerEl.clientWidth;
-      const scale = avail > 0 && avail < minW ? avail / minW : 1;
-      setFit((prev) => {
-        const height = scale < 1 ? Math.round(innerEl.offsetHeight * scale) : 0;
-        return prev.scale === scale && prev.height === height ? prev : { scale, height };
-      });
+      // `offsetWidth` ignores the transform, so this is the block's real width.
+      const natural = Math.max(minW ?? 0, kit?.offsetWidth ?? 0);
+      const scale = avail > 0 && natural > avail + 1 ? avail / natural : 1;
+      const height = scale < 1 ? Math.round(innerEl.offsetHeight * scale) : 0;
+      const width = scale < 1 ? natural : 0;
+      setFit((prev) => (prev.scale === scale && prev.width === width && prev.height === height ? prev : { scale, width, height }));
     };
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(outerEl);
     observer.observe(innerEl);
+    const kit = innerEl.firstElementChild;
+    if (kit) observer.observe(kit);
     return () => observer.disconnect();
   }, [minW]);
 
@@ -41,7 +45,7 @@ function Fit({ minW, children }: { minW: number; children: ReactNode }) {
         style={{
           display: "flex",
           justifyContent: "center",
-          width: scaled ? minW : "100%",
+          width: scaled ? fit.width : "100%",
           transform: scaled ? `scale(${fit.scale})` : undefined,
           transformOrigin: "top left",
         }}
@@ -57,11 +61,9 @@ export function BlockView({ id }: { id: string }) {
   const View = LIVE[id] ?? VIEWS[id];
   if (!View) return null;
   const minW = BLOCKS.find((block) => block.id === id)?.minW;
-  return minW ? (
+  return (
     <Fit minW={minW}>
       <View />
     </Fit>
-  ) : (
-    <View />
   );
 }

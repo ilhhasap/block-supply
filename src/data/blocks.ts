@@ -129,9 +129,9 @@ export const BLOCKS: Block[] = [
   { id: "rolling-counter", name: "Rolling counter", cat: "Data", h: 300, badge: "New" },
   { id: "heat-map", name: "Heat map", cat: "Data", h: 300 },
   { id: "stacked-bars", name: "Stacked bars", cat: "Data", h: 320 },
-  { id: "hero", name: "Hero", cat: "Hero", h: 380, badge: "New" },
+  { id: "hero", name: "Hero", cat: "Hero", h: 380, badge: "New", minW: 340 },
   { id: "feature-grid", name: "Feature grid", cat: "Features", h: 260 },
   { id: "cta-banner", name: "CTA banner", cat: "CTA", h: 240 },
-  { id: "faq", name: "FAQ", cat: "FAQ", h: 460 },
+  { id: "faq", name: "FAQ", cat: "FAQ", h: 460, minW: 320 },
   { id: "footer", name: "Footer", cat: "Footer", h: 340 },
 ];
