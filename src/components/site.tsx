@@ -8,7 +8,7 @@ import { FREE_COPIES } from "@/lib/copy-limit";
 import { listSavedBlocks, mergeSavedBlocks, setSavedBlock } from "@/lib/saved";
 import { BlockView } from "@/components/block-view";
 import { Editor } from "@/components/editor";
-import supplyMark from "@/components/supply-mark.svg";
+import { Footer } from "@/components/footer";
 
 type View = "library" | "free";
 
@@ -746,33 +746,3 @@ function AuthSlot({ savedCount, onSaved }: { savedCount: number; onSaved: () => 
   );
 }
 
-function Footer() {
-  return (
-    <footer className="supply">
-      <div className="supply-top">
-        <h2>
-          Let’s start
-          <br />
-          from nothin’
-        </h2>
-        <nav className="supply-links" aria-label="Social">
-          <a href="https://www.linkedin.com" target="_blank" rel="noreferrer">
-            LinkedIn
-          </a>
-          <a href="https://www.instagram.com" target="_blank" rel="noreferrer">
-            Instagram
-          </a>
-          <a href="https://www.behance.net" target="_blank" rel="noreferrer">
-            Behance
-          </a>
-        </nav>
-      </div>
-      <img className="supply-mark" src={supplyMark} alt="Supply" />
-      <div className="supply-meta">
-        <span>©{new Date().getFullYear()} — Founded by Sara Guedj</span>
-        <span>Visuals by Guillaume Perrette</span>
-        <span>Site by Pierre Patrault & Thomas Carré</span>
-      </div>
-    </footer>
-  );
-}
