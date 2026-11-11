@@ -1891,3 +1891,15 @@
 .hero-join {
   animation-delay: 0.12s;
 }
+
+/* Navbar links (logo, group tabs, Use for free) are real anchors now. */
+a.group-tab,
+a.join,
+a.logo {
+  text-decoration: none;
+}
+
+a.group-tab {
+  display: inline-flex;
+  align-items: center;
+}
