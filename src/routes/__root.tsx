@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+import { inject } from "@vercel/analytics";
 import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import { AuthProvider } from "@/lib/auth/provider";
 import appCss from "../styles.css?url";
@@ -30,7 +32,16 @@ export const Route = createRootRoute({
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
     ],
   }),
-  component: () => (
+  component: RootDocument,
+});
+
+function RootDocument() {
+  // Cookie-free visitor and page-view counts, shown in the Vercel project's Analytics tab.
+  useEffect(() => {
+    if (import.meta.env.PROD) inject({ mode: "production" });
+  }, []);
+
+  return (
     <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
@@ -42,5 +53,5 @@ export const Route = createRootRoute({
         <Scripts />
       </body>
     </html>
-  ),
-});
+  );
+}
