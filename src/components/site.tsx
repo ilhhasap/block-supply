@@ -372,7 +372,7 @@ export function Site() {
       >
         <div className="body">
           {view === "free" ? (
-            <FreePage onBrowse={() => goLibrary(null)} />
+            <FreePage onBrowse={() => goLibrary(null)} signedIn={Boolean(currentUser)} />
           ) : (
             <>
               <header className="hero">
@@ -630,36 +630,61 @@ function Questions() {
   );
 }
 
-function FreePage({ onBrowse }: { onBrowse: () => void }) {
+function FreePage({ onBrowse, signedIn }: { onBrowse: () => void; signedIn: boolean }) {
+  const steps: [string, string, string][] = [
+    ["1", "Copy a block", `Press Copy Figma on any block. The first ${FREE_COPIES} copies need no account.`],
+    ["2", "Log in, it’s free", `After ${FREE_COPIES} copies, log in with your email or Google to keep going. There is nothing to pay.`],
+    ["3", "Paste into Figma", "You get a real auto layout frame with live Geist text, ready to edit."],
+  ];
   return (
     <>
       <header className="hero free-hero">
         <div className="hero-dots" aria-hidden="true" />
-        <span className="hero-pill">$0 · {FREE_COPIES} copies, then a free account</span>
-        <h1 className="hero-head">Everything is free</h1>
+        <span className="hero-pill">{signedIn ? "You’re logged in · unlimited copies" : `Free · ${FREE_COPIES} copies without an account`}</span>
+        <h1 className="hero-head">Free to use. Always.</h1>
         <p className="hero-sub">
-          The whole library copies as Figma frames. Paste a block and keep editing the auto layout.
+          Every block is free to copy into Figma. {signedIn ? "Your account is free too, so copy as much as you like." : `After ${FREE_COPIES} copies, log in with a free account to keep copying.`}
         </p>
-        <button type="button" className="hero-join" onClick={onBrowse}>
-          Copy any block
-        </button>
+        <div className="free-cta">
+          <button type="button" className="hero-join" onClick={onBrowse}>
+            Browse the blocks
+          </button>
+          {signedIn ? null : (
+            <Link to="/login" className="free-ghost">
+              Create a free account
+            </Link>
+          )}
+        </div>
       </header>
+
+      <ol className="steps" aria-label="How it works">
+        {steps.map(([n, title, text]) => (
+          <li key={n}>
+            <span className="step-n" aria-hidden="true">
+              {n}
+            </span>
+            <strong>{title}</strong>
+            <p>{text}</p>
+          </li>
+        ))}
+      </ol>
+
       <div className="plans">
         <article className="plan" data-on="true">
-          <h3>Free</h3>
+          <h3>Free plan</h3>
           <strong>$0</strong>
-          <p>Forever. The only plan.</p>
+          <p>No card, no trial. This is the only plan.</p>
           <ul>
             <li>All {BLOCKS.length} blocks</li>
-            <li>Auto layout on every block</li>
-            <li>Geist on every text layer</li>
+            <li>Unlimited copies with a free account</li>
             <li>{FREE_COPIES} copies without an account</li>
+            <li>Save blocks to your account</li>
           </ul>
         </article>
         <article className="plan">
-          <h3>What paste keeps</h3>
-          <strong>Frame</strong>
-          <p>Figma reads the paste as layers.</p>
+          <h3>What you get when you paste</h3>
+          <strong>A real frame</strong>
+          <p>Figma reads the paste as layers you can edit.</p>
           <ul>
             <li>Auto layout rows and columns</li>
             <li>Padding, gap, and alignment</li>
@@ -668,13 +693,13 @@ function FreePage({ onBrowse }: { onBrowse: () => void }) {
           </ul>
         </article>
         <article className="plan">
-          <h3>What it isn’t</h3>
-          <strong>Pro</strong>
-          <p>There isn’t a paid tier hiding the rest.</p>
+          <h3>What is not here</h3>
+          <strong>No paid tier</strong>
+          <p>Nothing is locked behind a subscription.</p>
           <ul>
             <li>No trial</li>
             <li>No watermark</li>
-            <li>No download cap</li>
+            <li>No download limit</li>
             <li>No seat license</li>
           </ul>
         </article>

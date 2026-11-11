@@ -1696,3 +1696,83 @@
     align-items: stretch;
   }
 }
+
+/* Free page: hero actions and the three-step explainer */
+.free-cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 28px;
+}
+
+.free-cta .hero-join {
+  margin-top: 0;
+}
+
+.free-ghost {
+  display: inline-flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 20px;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--color-ink);
+  font: 500 15px/1 var(--font-sans);
+}
+
+.free-ghost:hover {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.steps li {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 22px 24px;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.step-n {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  margin-bottom: 8px;
+  place-items: center;
+  border-radius: 50%;
+  background: #17181a;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.steps strong {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.steps p {
+  margin: 0;
+  color: var(--color-sub);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+@media (max-width: 1100px) {
+  .steps {
+    grid-template-columns: 1fr;
+  }
+}
