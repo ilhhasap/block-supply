@@ -339,14 +339,16 @@ export function Editor({
               text={`${tune.gap}px`}
               onChange={(gap) => setEdit({ ...tune, gap })}
             />
-            <Bar
-              label="Shadow"
-              min={0}
-              max={limits.shadow}
-              value={tune.shadow}
-              text={`${tune.shadow}`}
-              onChange={(shadow) => setEdit({ ...tune, shadow })}
-            />
+            {block.cat === "Card" ? (
+              <Bar
+                label="Shadow"
+                min={0}
+                max={limits.shadow}
+                value={tune.shadow}
+                text={`${tune.shadow}`}
+                onChange={(shadow) => setEdit({ ...tune, shadow })}
+              />
+            ) : null}
             <Bar
               label="Opacity"
               min={20}
