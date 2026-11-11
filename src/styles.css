@@ -2171,3 +2171,45 @@ body {
     width: 320px;
   }
 }
+
+/* 404 page */
+.nf {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 20px;
+  text-align: center;
+}
+
+.nf-code {
+  margin: 0;
+  color: var(--color-ink);
+  opacity: 0.08;
+  font-size: clamp(140px, 30vw, 320px);
+  font-weight: 500;
+  letter-spacing: -0.06em;
+  line-height: 0.85;
+  user-select: none;
+}
+
+.nf-title {
+  margin: 8px 0 0;
+  color: var(--color-ink);
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.3px;
+}
+
+.nf-sub {
+  margin: 8px 0 0;
+  color: var(--color-sub);
+  font-size: 15px;
+}
+
+.nf-btn {
+  display: inline-flex;
+  align-items: center;
+  animation: none;
+}
