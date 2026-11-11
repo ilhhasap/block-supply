@@ -57,7 +57,16 @@ function pack(items: Block[], n: number) {
 async function copyBlock(block: Block, kit: HTMLElement) {
   try {
     const { generateFromElement, inlineComputedStyles } = await import("@magicpatterns/html-to-figma");
-    const inlined = inlineComputedStyles(kit);
+    // A block shown scaled down is copied at its real size.
+    const fit = kit.closest<HTMLElement>("[data-fit-inner]");
+    const scaleBefore = fit?.style.transform ?? "";
+    if (fit) fit.style.transform = "none";
+    let inlined: string;
+    try {
+      inlined = inlineComputedStyles(kit);
+    } finally {
+      if (fit) fit.style.transform = scaleBefore;
+    }
     const clone = new DOMParser().parseFromString(inlined, "text/html").body.firstElementChild;
     if (!clone) throw new Error("empty frame");
     const html = await generateFromElement(clone, { topLayerName: block.name });
