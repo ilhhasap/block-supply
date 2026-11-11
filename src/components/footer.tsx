@@ -1,8 +1,8 @@
 import { useState, type ReactNode } from "react";
 import { BLOCKS } from "@/data/blocks";
 
-/** The mailbox for the "say hello" note. Replace with a real address before launch. */
-const CONTACT_EMAIL = "hello@example.com";
+/** The mailbox for the "say hello" note. */
+const CONTACT_EMAIL = "ilhhasap@gmail.com";
 
 /** Little UI specimens that drift across the top of the footer. Pure markup, no images. */
 const TILES: { key: string; tilt: number; node: ReactNode }[] = [
