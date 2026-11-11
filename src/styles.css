@@ -226,7 +226,7 @@
   padding: 20px;
   overflow: auto;
   border-radius: 28px;
-  background: #f6f6f7;
+  background: #f1f1f1;
 }
 
 .bench-panel :is(h2, p, span, b, button) {
