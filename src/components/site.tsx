@@ -76,6 +76,9 @@ export function Site() {
   const [editing, setEditing] = useState<string | null>(null);
   const findRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { user: currentUser, isPending: authPending } = useCurrentUserState();
+  const [showTop, setShowTop] = useState(false);
+  const [gate, setGate] = useState<"save" | "copy" | null>(null);
 
   useEffect(() => {
     const sync = () => setCols(columnsFor(window.innerWidth));
@@ -104,6 +107,7 @@ export function Site() {
       if (event.key === "Escape") {
         setMenu(false);
         setEditing(null);
+        setGate(null);
       }
     };
     window.addEventListener("keydown", onKey);
@@ -146,6 +150,15 @@ export function Site() {
     scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  /** Saving needs an account; signed-out visitors get the log-in prompt instead. */
+  function requestSave(id: string) {
+    if (!currentUser) {
+      if (!authPending) setGate("save");
+      return;
+    }
+    toggleSave(id);
+  }
+
   function toggleSave(id: string) {
     setSaved((prev) => {
       const next = prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id];
@@ -167,9 +180,7 @@ export function Site() {
     }
     if (!gate.ok) {
       setBusy(null);
-      window.sessionStorage.setItem("supply-copy-gate", "1");
-      setToast("Log in");
-      void navigate({ to: "/login" });
+      setGate("copy");
       return;
     }
     const ok = await copyBlock(block, kit);
@@ -277,7 +288,11 @@ export function Site() {
         </div>
       ) : null}
 
-      <div className="scroll" ref={scrollRef}>
+      <div
+        className="scroll"
+        ref={scrollRef}
+        onScroll={(event) => setShowTop(event.currentTarget.scrollTop > 520)}
+      >
         <div className="body">
           {view === "free" ? (
             <FreePage onBrowse={() => goLibrary(null)} />
@@ -353,7 +368,7 @@ export function Site() {
                             aria-label={saved.includes(block.id) ? `Unsave ${block.name}` : `Save ${block.name}`}
                             onClick={(event) => {
                               event.stopPropagation();
-                              toggleSave(block.id);
+                              requestSave(block.id);
                             }}
                           >
                             <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
@@ -404,9 +419,38 @@ export function Site() {
           busy={busy === editingBlock.id}
           copied={copied === editingBlock.id}
           onClose={() => setEditing(null)}
-          onSave={() => toggleSave(editingBlock.id)}
+          onSave={() => requestSave(editingBlock.id)}
           onCopy={(kit) => void onCopy(editingBlock, kit)}
           onShare={() => void onShare(editingBlock)}
+        />
+      ) : null}
+
+      <button
+        type="button"
+        className="to-top"
+        data-on={showTop ? "true" : "false"}
+        aria-label="Back to top"
+        tabIndex={showTop ? 0 : -1}
+        onClick={() => scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" })}
+      >
+        <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" fill="none">
+          <path d="M4 3h12M10 17V6.5M5.5 10.5 10 6l4.5 4.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+
+      {gate ? (
+        <LoginGate
+          title={gate === "copy" ? `You’ve used your ${FREE_COPIES} free copies` : "Log in to save blocks"}
+          body={
+            gate === "copy"
+              ? "Log in to keep copying blocks into Figma. It stays free."
+              : "Bookmark the blocks you like and find them again anytime. It stays free."
+          }
+          onClose={() => setGate(null)}
+          onLogin={() => {
+            if (gate === "copy") window.sessionStorage.setItem("supply-copy-gate", "1");
+            void navigate({ to: "/login" });
+          }}
         />
       ) : null}
 
@@ -425,6 +469,31 @@ export function Site() {
         <em>
           {toast && toast !== "Couldn’t copy" && toast !== "Link copied" && toast !== "Log in" ? `· ${toast}` : ""}
         </em>
+      </div>
+    </div>
+  );
+}
+
+function LoginGate({ title, body, onClose, onLogin }: { title: string; body: string; onClose: () => void; onLogin: () => void }) {
+  return (
+    <div
+      className="gate"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="gate-title"
+      onClick={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <div className="gate-body">
+        <h2 id="gate-title">{title}</h2>
+        <p>{body}</p>
+        <button type="button" className="gate-cta" onClick={onLogin} autoFocus>
+          <span>Log in</span>
+          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none">
+            <path d="M6 3.2 10.8 8 6 12.8" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
       </div>
     </div>
   );
