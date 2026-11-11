@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { BLOCKS, CATEGORIES, type Block, type Category } from "@/data/blocks";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
-import { UserButton } from "@/lib/auth/gates";
+import { authEnabled, signOut } from "@/lib/auth/client";
 import { releaseCopy, reserveCopy } from "@/lib/copy-gate";
 import { FREE_COPIES } from "@/lib/copy-limit";
 import { BlockView } from "@/components/block-view";
@@ -10,6 +10,10 @@ import { Editor } from "@/components/editor";
 import supplyMark from "@/components/supply-mark.svg";
 
 type View = "library" | "free";
+
+const PLAIN_TOASTS = ["Couldn’t copy", "Link copied", "Log in", "Saved", "Welcome back"];
+const PENDING_SAVE = "supply-pending-save";
+const PENDING_COPY = "supply-pending-copy";
 
 function Logo({ size = 32 }: { size?: number }) {
   return (
@@ -95,6 +99,30 @@ export function Site() {
     }
   }, []);
 
+  // Pick up what the visitor was doing before they were sent to log in.
+  useEffect(() => {
+    if (authPending || !currentUser) return;
+    try {
+      const pendingSave = window.sessionStorage.getItem(PENDING_SAVE);
+      const copyRetry = window.sessionStorage.getItem(PENDING_COPY);
+      window.sessionStorage.removeItem(PENDING_SAVE);
+      window.sessionStorage.removeItem(PENDING_COPY);
+      if (pendingSave && BLOCKS.some((block) => block.id === pendingSave)) {
+        setSaved((prev) => {
+          if (prev.includes(pendingSave)) return prev;
+          const next = [...prev, pendingSave];
+          localStorage.setItem("block-supply-saved", JSON.stringify(next));
+          return next;
+        });
+        setToast("Saved");
+      } else if (copyRetry) {
+        setToast("Welcome back");
+      }
+    } catch {
+      /* storage unavailable */
+    }
+  }, [authPending, currentUser]);
+
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       const meta = event.metaKey || event.ctrlKey;
@@ -149,7 +177,14 @@ export function Site() {
   /** Saving needs an account; signed-out visitors get the log-in prompt instead. */
   function requestSave(id: string) {
     if (!currentUser) {
-      if (!authPending) setGate("save");
+      if (!authPending) {
+        try {
+          window.sessionStorage.setItem(PENDING_SAVE, id);
+        } catch {
+          /* storage unavailable */
+        }
+        setGate("save");
+      }
       return;
     }
     toggleSave(id);
@@ -244,10 +279,19 @@ export function Site() {
           )}
         </label>
         <div className="tools">
-          <AuthSlot />
-          <button type="button" className="join" onClick={goFree}>
-            <span>Use for free</span>
-          </button>
+          <AuthSlot
+            savedCount={saved.length}
+            onSaved={() => {
+              setOnlySaved(true);
+              setView("library");
+              scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+          />
+          {!currentUser && !authPending ? (
+            <button type="button" className="join" onClick={goFree}>
+              <span>Use for free</span>
+            </button>
+          ) : null}
         </div>
       </header>
 
@@ -263,7 +307,9 @@ export function Site() {
             <>
               <header className="hero">
                 <div className="hero-dots" aria-hidden="true" />
-                <span className="hero-pill">{FREE_COPIES} free copies, then log in</span>
+                <span className="hero-pill">
+                  {currentUser ? "Unlimited copies, free" : `${FREE_COPIES} free copies, then log in`}
+                </span>
                 <h1 className="hero-head">Editable UI Components</h1>
                 <p className="hero-sub">
                   A library of <b>editable UI blocks</b>. Copy one and paste it into Figma as{" "}
@@ -421,7 +467,14 @@ export function Site() {
           }
           onClose={() => setGate(null)}
           onLogin={() => {
-            if (gate === "copy") window.sessionStorage.setItem("supply-copy-gate", "1");
+            try {
+              if (gate === "copy") {
+                window.sessionStorage.setItem("supply-copy-gate", "1");
+                window.sessionStorage.setItem(PENDING_COPY, "1");
+              }
+            } catch {
+              /* storage unavailable */
+            }
             void navigate({ to: "/login" });
           }}
         />
@@ -432,7 +485,11 @@ export function Site() {
           <circle cx="8" cy="8" r="7" fill="#17181A" />
           <path d="M5 8.2 7.1 10.2 11 6" fill="none" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" />
         </svg>
-        {toast === "Couldn’t copy"
+        {toast === "Saved"
+          ? "Saved to your list"
+          : toast === "Welcome back"
+            ? "You’re in. Copy it again"
+            : toast === "Couldn’t copy"
           ? "Couldn’t copy"
           : toast === "Log in"
             ? "Log in to keep copying"
@@ -440,7 +497,7 @@ export function Site() {
               ? "Link copied"
               : "Ready for Figma"}
         <em>
-          {toast && toast !== "Couldn’t copy" && toast !== "Link copied" && toast !== "Log in" ? `· ${toast}` : ""}
+          {toast && !PLAIN_TOASTS.includes(toast) ? `· ${toast}` : ""}
         </em>
       </div>
     </div>
@@ -560,20 +617,86 @@ function FreePage({ onBrowse }: { onBrowse: () => void }) {
   );
 }
 
-function AuthSlot() {
+function AuthSlot({ savedCount, onSaved }: { savedCount: number; onSaved: () => void }) {
   const { user, isPending } = useCurrentUserState();
+  const [open, setOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const close = (event: MouseEvent | KeyboardEvent) => {
+      if (event instanceof KeyboardEvent) {
+        if (event.key === "Escape") setOpen(false);
+        return;
+      }
+      if (rootRef.current && !rootRef.current.contains(event.target as Node)) setOpen(false);
+    };
+    window.addEventListener("mousedown", close);
+    window.addEventListener("keydown", close);
+    return () => {
+      window.removeEventListener("mousedown", close);
+      window.removeEventListener("keydown", close);
+    };
+  }, [open]);
+
   if (isPending) return <span className="auth-skel" aria-hidden="true" />;
-  if (user) {
+  if (!user) {
     return (
-      <span className="auth-slot">
-        <UserButton />
-      </span>
+      <Link to="/login" className="login-link">
+        Log in
+      </Link>
     );
   }
+  const label = user.displayName ?? user.primaryEmail ?? "Account";
   return (
-    <Link to="/login" className="login-link">
-      Log in
-    </Link>
+    <div className="acct" ref={rootRef}>
+      <button
+        type="button"
+        className="acct-btn"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={`Account menu for ${label}`}
+        onClick={() => setOpen((on) => !on)}
+      >
+        {user.profileImageUrl ? (
+          <img src={user.profileImageUrl} alt="" referrerPolicy="no-referrer" />
+        ) : (
+          <span>{label.charAt(0).toUpperCase()}</span>
+        )}
+      </button>
+      {open ? (
+        <div className="acct-menu" role="menu">
+          <div className="acct-who">
+            <b>{label}</b>
+            {user.primaryEmail && user.primaryEmail !== label ? <small>{user.primaryEmail}</small> : null}
+          </div>
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              setOpen(false);
+              onSaved();
+            }}
+          >
+            Saved ({savedCount})
+          </button>
+          {authEnabled ? (
+            <button
+              type="button"
+              role="menuitem"
+              disabled={signingOut}
+              onClick={() => {
+                setSigningOut(true);
+                void signOut().catch(() => setSigningOut(false));
+              }}
+            >
+              {signingOut ? "Signing out…" : "Sign out"}
+            </button>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
   );
 }
 
