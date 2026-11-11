@@ -26,7 +26,7 @@ import { randomBytes } from "node:crypto";
 import { Pool } from "pg";
 import { ensureDbReady, getPglite } from "../db";
 import { emailAndPasswordEnabled } from "./email-password";
-import { emailConfigured, sendEmail, verificationEmail } from "./email.server";
+import { emailConfigured, resetPasswordEmail, sendEmail, verificationEmail } from "./email.server";
 import { pgliteDialect } from "./pglite-dialect";
 
 // Kick (and share) PGLite bootstrap as soon as the auth server module loads.
@@ -113,7 +113,17 @@ export const auth = betterAuth({
   // before signing in. Without one (local dev) the link is logged instead and
   // verification is not enforced, so nobody gets locked out.
   ...(emailAndPasswordEnabled
-    ? { emailAndPassword: { enabled: true, requireEmailVerification: emailConfigured } }
+    ? {
+        emailAndPassword: {
+          enabled: true,
+          requireEmailVerification: emailConfigured,
+          resetPasswordTokenExpiresIn: 60 * 60,
+          revokeSessionsOnPasswordReset: true,
+          sendResetPassword: async ({ user, url }) => {
+            await sendEmail({ to: user.email, ...resetPasswordEmail(url) });
+          },
+        },
+      }
     : {}),
   emailVerification: {
     sendOnSignUp: true,
