@@ -2432,3 +2432,51 @@ button.free-ghost {
 [data-noshadow] .kit * {
   box-shadow: none !important;
 }
+
+/* Mimic page (coming soon) */
+.mimic {
+  min-height: calc(100dvh - 220px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.mimic-soon {
+  margin: 0;
+  color: var(--color-ink);
+  opacity: 0.08;
+  font-size: clamp(120px, 26vw, 280px);
+  font-weight: 500;
+  letter-spacing: -0.06em;
+  line-height: 0.85;
+  user-select: none;
+}
+
+.mimic-title {
+  margin: 8px 0 0;
+  color: var(--color-ink);
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.3px;
+}
+
+.mimic-sub {
+  max-width: 44ch;
+  margin: 8px 0 0;
+  color: var(--color-sub);
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.mimic-pill {
+  margin-top: 22px;
+  animation: none;
+}
+
+.mimic-dev {
+  margin: 14px 0 0;
+  color: var(--color-ink-4);
+  font-size: 13px;
+}

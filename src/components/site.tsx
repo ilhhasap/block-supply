@@ -11,6 +11,8 @@ import { BlockView } from "@/components/block-view";
 import { Editor } from "@/components/editor";
 import { AuthModal } from "@/components/auth-modal";
 import { Footer } from "@/components/footer";
+import { MimicPage } from "@/components/mimic";
+import { hostOf, isControlEvent, kitIn } from "@/components/shadow-host";
 
 const LOCAL_SAVED = "block-supply-saved";
 const TOAST_TEXT: Record<string, string> = {
@@ -58,7 +60,7 @@ async function copyBlock(block: Block, kit: HTMLElement) {
   try {
     const { generateFromElement, inlineComputedStyles } = await import("@magicpatterns/html-to-figma");
     // A block shown scaled down is copied at its real size.
-    const fit = kit.closest<HTMLElement>("[data-fit-inner]");
+    const fit = (hostOf(kit) ?? kit).closest<HTMLElement>("[data-fit-inner]");
     const scaleBefore = fit?.style.transform ?? "";
     if (fit) fit.style.transform = "none";
     // The converter gives a frame with no fill an opaque white one, which shows up in Figma as a
@@ -97,15 +99,17 @@ export function Site() {
   const { page: pageParam, id: blockParam } = useParams({ strict: false }) as { page?: string; id?: string };
   const editing = BLOCKS.some((block) => block.id === blockParam) ? (blockParam ?? null) : null;
   const editingGroup = editing ? groupOf(BLOCKS.find((block) => block.id === editing)!.cat) : null;
-  const page: "components" | "sections" | "pricing" =
+  const page: "components" | "sections" | "pricing" | "mimic" =
     editingGroup === "Sections"
       ? "sections"
       : editingGroup
         ? "components"
-        : pageParam === "sections" || pageParam === "pricing"
+        : pageParam === "sections" || pageParam === "pricing" || pageParam === "mimic"
           ? pageParam
           : "components";
   const group: Group = page === "sections" ? "Sections" : "Components";
+  // Pages that are not a block library: no group tab is active on them.
+  const ownPage = page === "pricing" || page === "mimic";
   const [cat, setCat] = useState<Category | null>(null);
   const [cols, setCols] = useState(3);
   const [saved, setSaved] = useState<string[]>([]);
@@ -347,8 +351,8 @@ export function Site() {
                 to="/{-$page}"
                 params={{ page: name === "Sections" ? "sections" : undefined }}
                 className="group-tab"
-                data-on={page !== "pricing" && group === name ? "true" : "false"}
-                aria-current={page !== "pricing" && group === name ? "page" : undefined}
+                data-on={!ownPage && group === name ? "true" : "false"}
+                aria-current={!ownPage && group === name ? "page" : undefined}
                 onClick={() => {
                   setOnlySaved(false);
                   setQuery("");
@@ -357,6 +361,19 @@ export function Site() {
                 {name}
               </Link>
             ))}
+            <Link
+              to="/{-$page}"
+              params={{ page: "mimic" }}
+              className="group-tab"
+              data-on={page === "mimic" ? "true" : "false"}
+              aria-current={page === "mimic" ? "page" : undefined}
+              onClick={() => {
+                setOnlySaved(false);
+                setQuery("");
+              }}
+            >
+              Mimic
+            </Link>
           </nav>
         </div>
         <label className="find">
@@ -372,7 +389,7 @@ export function Site() {
             onChange={(event) => {
               setQuery(event.target.value);
               if (event.target.value) setCat(null);
-              if (page === "pricing") void navigate({ to: "/{-$page}", params: { page: undefined } });
+              if (ownPage) void navigate({ to: "/{-$page}", params: { page: undefined } });
             }}
           />
           {query ? (
@@ -394,7 +411,7 @@ export function Site() {
             savedCount={saved.length}
             onSaved={() => {
               setOnlySaved(true);
-              if (page === "pricing") void navigate({ to: "/{-$page}", params: { page: undefined } });
+              if (ownPage) void navigate({ to: "/{-$page}", params: { page: undefined } });
               scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
             }}
           />
@@ -424,6 +441,8 @@ export function Site() {
         <div className="body">
           {page === "pricing" ? (
             <FreePage onBrowse={goLibrary} signedIn={Boolean(currentUser)} onSignup={() => setAuth({ mode: "signup" })} />
+          ) : page === "mimic" ? (
+            <MimicPage />
           ) : (
             <>
               <header className="hero">
@@ -503,7 +522,7 @@ export function Site() {
                           onClick={(event) => {
                             // Clicks on a live control interact with it; clicks elsewhere open the editor.
                             const target = event.target as HTMLElement;
-                            if (target.closest(".ix, [contenteditable], [role=slider], [role=textbox]")) return;
+                            if (isControlEvent(event.nativeEvent) || target.closest(".ix, [contenteditable], [role=slider], [role=textbox]")) return;
                             void navigate({ to: "/b/$id", params: { id: block.id } });
                           }}
                         >
@@ -538,7 +557,7 @@ export function Site() {
                             data-on={copied === block.id ? "true" : "false"}
                             onClick={(event) => {
                               event.stopPropagation();
-                              const kit = event.currentTarget.closest("article")?.querySelector(".kit");
+                              const kit = kitIn(event.currentTarget.closest("article"));
                               void onCopy(block, kit instanceof HTMLElement ? kit : null);
                             }}
                           >
