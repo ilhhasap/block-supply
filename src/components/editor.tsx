@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { groupOf, type Block } from "@/data/blocks";
 import { BlockView } from "@/components/block-view";
 
@@ -166,6 +166,11 @@ export function Editor({
   const snapRef = useRef<Map<HTMLElement, Snap> | null>(null);
   const baseRef = useRef<Tune | null>(null);
   const [edit, setEdit] = useState<Tune | null>(null);
+  // The modal grows out of its card and shrinks back into it: "enter" and "exit" are the card pose.
+  const [phase, setPhase] = useState<"enter" | "open" | "exit">("enter");
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const closing = useRef(false);
   const [limits, setLimits] = useState<Limits>({ corner: 48, gapMin: -24, gapMax: 40, shadow: 64 });
 
   useLayoutEffect(() => {
@@ -186,15 +191,67 @@ export function Editor({
 
   const tune = edit;
 
+  /** Point the card pose at the card as it is on the page right now. */
+  const aim = () => {
+    const overlay = overlayRef.current;
+    const sheet = sheetRef.current;
+    if (!overlay || !sheet) return;
+    const card = document.getElementById(`block-${block.id}`);
+    if (!card) {
+      overlay.style.setProperty("--ox", "0px");
+      overlay.style.setProperty("--oy", "0px");
+      overlay.style.setProperty("--os", "0.94");
+      return;
+    }
+    const from = card.getBoundingClientRect();
+    // Layout size and position ignore the transform, so this works mid-animation too.
+    const centerX = sheet.offsetLeft + sheet.offsetWidth / 2;
+    const centerY = sheet.offsetTop + sheet.offsetHeight / 2 - overlay.scrollTop;
+    const scale = Math.min(0.95, Math.max(0.25, from.width / Math.max(1, sheet.offsetWidth)));
+    overlay.style.setProperty("--ox", `${Math.round(from.left + from.width / 2 - centerX)}px`);
+    overlay.style.setProperty("--oy", `${Math.round(from.top + from.height / 2 - centerY)}px`);
+    overlay.style.setProperty("--os", scale.toFixed(3));
+  };
+
+  useLayoutEffect(() => {
+    aim();
+    // `aim` has already resolved the card pose, so a short timeout is enough to start the transition
+    // (unlike animation frames, it also fires when the tab is in the background).
+    const id = window.setTimeout(() => setPhase("open"), 24);
+    return () => window.clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const requestClose = () => {
+    if (closing.current) return;
+    closing.current = true;
+    aim();
+    setPhase("exit");
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.setTimeout(onClose, reduce ? 0 : 340);
+  };
+
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") requestClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <div
+      ref={overlayRef}
       className="bench"
+      data-phase={phase}
       role="presentation"
       onClick={(event) => {
-        if (event.target === event.currentTarget) onClose();
+        if (event.target === event.currentTarget) requestClose();
       }}
     >
       <div
+        ref={sheetRef}
         className="bench-sheet"
         role="dialog"
         aria-modal="true"
@@ -252,7 +309,7 @@ export function Editor({
       <aside className="bench-panel">
         <div className="bench-head">
           <h2 id="bench-title">{block.name}</h2>
-          <button type="button" className="bench-x" aria-label="Close" onClick={onClose}>
+          <button type="button" className="bench-x" aria-label="Close" onClick={requestClose}>
             <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
               <path d="M3 3 13 13M13 3 3 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
             </svg>
