@@ -842,6 +842,8 @@
 @media (prefers-reduced-motion: reduce) {
   .kit .spin {
     animation-duration: 2.4s;
+  }
+}
 
 /* Back to top */
 .to-top {
@@ -952,6 +954,9 @@
   .gate-body,
   .to-top {
     animation: none;
+    transition: none;
+  }
+}
 
 /* Library cards: gentle lift and press feedback (translate only, so copied layouts are unaffected). */
 .card {
