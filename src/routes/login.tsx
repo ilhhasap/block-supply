@@ -7,7 +7,7 @@ import { useCurrentUserState } from "@/lib/auth/use-current-user";
 export const Route = createFileRoute("/login")({
   component: LoginPage,
   head: () => ({
-    meta: [{ title: "Log in — Supply" }],
+    meta: [{ title: "Log in — Block Supply" }],
   }),
 });
 

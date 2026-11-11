@@ -9,7 +9,7 @@ export const Route = createFileRoute("/reset-password")({
     token: typeof search.token === "string" ? search.token : undefined,
     error: typeof search.error === "string" ? search.error : undefined,
   }),
-  head: () => ({ meta: [{ title: "Choose a new password — Supply" }] }),
+  head: () => ({ meta: [{ title: "New password — Block Supply" }] }),
 });
 
 function ResetPasswordPage() {
