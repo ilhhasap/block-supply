@@ -16,6 +16,9 @@ const TITLES: Record<string, { title: string; description: string }> = {
 };
 
 export const Route = createFileRoute("/{-$page}")({
+  validateSearch: (search: Record<string, unknown>): { auth?: "login" | "signup" } => ({
+    auth: search.auth === "login" || search.auth === "signup" ? search.auth : undefined,
+  }),
   beforeLoad: ({ params }) => {
     if (params.page && !PAGES.includes(params.page)) throw notFound();
   },
