@@ -255,7 +255,7 @@ export function Toast() {
   }
   return (
     <Box layer="Toast" root dir="row" hug="both" align="center" gap={12} pad="12px 16px" radius={999} {...CARD} ui={{ ...act(() => setOpen(false), "Dismiss toast"), role: "status" }}>
-      <Box layer="Mark" dir="row" w={28} h={28} radius={14} align="center" justify="center" bg="#E7F6F2">
+      <Box layer="Mark" dir="row" w={28} h={28} radius={14} align="center" justify="center" bg="#F3F3F2">
         <Check color={GREEN} />
       </Box>
       <Box layer="Copy" dir="col" gap={0}>
@@ -549,7 +549,7 @@ export function Notification() {
   }
   return (
     <Box layer="Notification" root fill dir="row" align="flex-start" gap={12} pad={16} radius={20} {...CARD}>
-      <Box layer="Icon" dir="row" w={36} h={36} radius={12} bg="#E7EEFE" align="center" justify="center">
+      <Box layer="Icon" dir="row" w={36} h={36} radius={12} bg="#F3F3F2" align="center" justify="center">
         <Box layer="Dot" w={10} h={10} radius={5} bg={BLUE} />
       </Box>
       <Box layer="Text" dir="col" gap={2} style={{ flex: 1 }}>

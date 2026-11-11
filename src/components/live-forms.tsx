@@ -567,7 +567,7 @@ export function Upload() {
         onDrop: (e) => { e.preventDefault(); e.stopPropagation(); setOver(false); const f = e.dataTransfer.files[0]; take(f ? f.name : "frame.png"); },
       }}
     >
-      <Box layer="Arrow" dir="row" w={44} h={44} radius={22} align="center" justify="center" bg={file ? "#E7F6F2" : WASH}>
+      <Box layer="Arrow" dir="row" w={44} h={44} radius={22} align="center" justify="center" bg={file ? "#F3F3F2" : WASH}>
         {busy ? <Spin /> : file ? <Check color={GREEN} /> : <Arrow dir="up" />}
       </Box>
       <Txt size={15} weight={600}>

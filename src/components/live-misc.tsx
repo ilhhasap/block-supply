@@ -64,9 +64,9 @@ export function Rating() {
 
 export function StatusPills() {
   const items = [
-    ["Active", GREEN, "#E7F6F2"],
-    ["Pending", AMBER, "#FBF1E1"],
-    ["Failed", CORAL, "#FBE9E6"],
+    ["Active", GREEN, "#F3F3F2"],
+    ["Pending", MUTE, "#F3F3F2"],
+    ["Failed", CORAL, "#F3F3F2"],
   ] as const;
   const [on, setOn] = useState<string>("Active");
   return (
@@ -354,7 +354,7 @@ export function VoiceButton() {
   }, [on]);
   return (
     <Box layer="Voice button" root dir="col" hug="both" align="center" gap={14}>
-      <Box layer="Mic" dir="row" w={92} h={92} radius={46} align="center" justify="center" bg={on ? CORAL : INK} border={`10px solid ${on ? "rgba(225,91,74,0.18)" : "rgba(23,24,26,0.08)"}`} style={{ transition: "background-color 0.2s ease, border-color 0.2s ease" }} ui={{ ...act(() => setOn((v) => !v), "Talk"), "aria-pressed": on }}>
+      <Box layer="Mic" dir="row" w={92} h={92} radius={46} align="center" justify="center" bg={on ? MUTE : INK} border={`10px solid ${on ? "rgba(23,24,26,0.22)" : "rgba(23,24,26,0.08)"}`} style={{ transition: "background-color 0.2s ease, border-color 0.2s ease" }} ui={{ ...act(() => setOn((v) => !v), "Talk"), "aria-pressed": on }}>
         <Mic />
       </Box>
       <Txt size={14} weight={500}>{on ? `Listening ${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")}` : "Tap to talk"}</Txt>

@@ -1277,15 +1277,15 @@
 
 .ft-avatars i:first-child {
   margin-left: 0;
-  background: linear-gradient(135deg, #ffd9a8, #ff9f7a);
+  background: linear-gradient(135deg, #e6e5e2, #b9b8b3);
 }
 
 .ft-avatars i:nth-child(2) {
-  background: linear-gradient(135deg, #b9d7ff, #7a9dff);
+  background: linear-gradient(135deg, #cfcecb, #8e8d88);
 }
 
 .ft-avatars i:nth-child(3) {
-  background: linear-gradient(135deg, #cdf2d4, #6cc48c);
+  background: linear-gradient(135deg, #bdbcb8, #6f6e68);
 }
 
 .ft-avatars b {

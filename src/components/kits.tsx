@@ -5,12 +5,12 @@ const MUTE = "#6F6E68";
 const LINE = "#E6E5E2";
 const WASH = "#F3F3F2";
 const PAPER = "#FFFFFF";
-const BLUE = "#3A6FF0";
-const CORAL = "#E15B4A";
-const AMBER = "#E59A3C";
-const TEAL = "#3AA89A";
-const VIOLET = "#7A73E0";
-const GREEN = "#1F7A62";
+const BLUE = "#17181A";
+const CORAL = "#17181A";
+const AMBER = "#C9C8C4";
+const TEAL = "#5A5A57";
+const VIOLET = "#8E8D88";
+const GREEN = "#17181A";
 const FONT = "Geist";
 
 type Dir = "row" | "col";
@@ -739,8 +739,8 @@ function FreePlan() {
 function Badges() {
   const items = [
     ["Free", INK, PAPER],
-    ["Ready", "#E7F6F2", GREEN],
-    ["Edited", "#FDECEC", CORAL],
+    ["Ready", "#F3F3F2", GREEN],
+    ["Edited", "#F3F3F2", CORAL],
     ["Vector", WASH, INK],
   ] as const;
   return (
@@ -981,7 +981,7 @@ function Alert() {
 function Toast() {
   return (
     <Card layer="Toast" dir="row" align="center" gap={12} pad="12px 16px" radius={999}>
-      <Box layer="Mark" dir="row" w={28} h={28} radius={14} align="center" justify="center" bg="#E7F6F2">
+      <Box layer="Mark" dir="row" w={28} h={28} radius={14} align="center" justify="center" bg="#F3F3F2">
         <Check color={GREEN} />
       </Box>
       <Box layer="Copy" dir="col" gap={0}>
@@ -1467,7 +1467,7 @@ function Skeleton() {
 
 function Notice() {
   return (
-    <Box layer="Inline notice" root fill dir="row" align="center" gap={10} pad="12px 14px" radius={16} bg="#F4F7FF">
+    <Box layer="Inline notice" root fill dir="row" align="center" gap={10} pad="12px 14px" radius={16} bg="#F3F3F2">
       <Box layer="Info" dir="row" w={20} h={20} radius={10} align="center" justify="center" bg={BLUE}>
         <Txt size={12} weight={700} color={PAPER}>
           i
@@ -1501,8 +1501,8 @@ function Star({ on }: { on?: boolean }) {
     <svg width="22" height="22" viewBox="0 0 16 16" aria-hidden="true">
       <path
         d="M8 1.5l1.9 3.9 4.3.6-3.1 3 .7 4.3L8 11.3l-3.8 2 .7-4.3-3.1-3 4.3-.6L8 1.5Z"
-        fill={on ? AMBER : "none"}
-        stroke={on ? AMBER : LINE}
+        fill={on ? INK : "none"}
+        stroke={on ? INK : LINE}
         strokeWidth="1.2"
         strokeLinejoin="round"
       />
@@ -1851,9 +1851,9 @@ function Spinner() {
 
 function StatusPills() {
   const items = [
-    ["Active", GREEN, "#E7F6F2"],
-    ["Pending", AMBER, "#FBF1E1"],
-    ["Failed", CORAL, "#FBE9E6"],
+    ["Active", GREEN, "#F3F3F2"],
+    ["Pending", MUTE, "#F3F3F2"],
+    ["Failed", CORAL, "#F3F3F2"],
   ] as const;
   return (
     <Box layer="Status pills" root dir="row" hug="both" align="center" gap={8}>
@@ -2042,7 +2042,7 @@ function ProductCard() {
 function NotificationCard() {
   return (
     <Card layer="Notification" dir="row" align="flex-start" gap={12} pad={16} radius={20}>
-      <Box layer="Icon" dir="row" w={36} h={36} radius={12} bg="#E7EEFE" align="center" justify="center">
+      <Box layer="Icon" dir="row" w={36} h={36} radius={12} bg="#F3F3F2" align="center" justify="center">
         <Box layer="Dot" w={10} h={10} radius={5} bg={BLUE} />
       </Box>
       <Box layer="Text" dir="col" gap={2} style={{ flex: 1 }}>
