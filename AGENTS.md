@@ -17,6 +17,10 @@ Email verification: set `RESEND_API_KEY` (and `EMAIL_FROM`) to send verification
 a verified email to log in. Without the key, the link is logged to the server console and
 verification is not enforced (local dev).
 `VITE_AUTH_ENABLED=false` disables auth and uses a shared dev user.
+Owner stats page at `/admin`: set `ADMIN_EMAILS` (comma separated) to the emails allowed to open it; in
+production the account must have a verified email (sign in with Google). Everyone else gets "Page not
+found". Copies are logged to `copy_events`. Visitors and page views come from Vercel Analytics, which must be
+enabled in the Vercel project (Analytics tab).
 Protect server functions with `authMiddleware` (`src/lib/auth/middleware.ts`).
 
 ## Notes

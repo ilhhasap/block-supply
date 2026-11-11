@@ -1955,3 +1955,207 @@ body {
 .bench[data-phase="enter"] .bench-sheet {
   transition: none;
 }
+
+/* Stats page (/admin) */
+.adm {
+  box-sizing: border-box;
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 40px 20px 80px;
+  color: var(--color-ink);
+}
+
+.adm-center {
+  display: flex;
+  min-height: 100dvh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.adm-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.adm h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+
+.adm-back {
+  color: var(--color-sub);
+  font-size: 14px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.adm-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.adm-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 20px;
+  border: 1px solid rgba(23, 24, 26, 0.08);
+  border-radius: 20px;
+  background: #fff;
+}
+
+.adm-card span {
+  color: var(--color-sub);
+  font-size: 13px;
+}
+
+.adm-card strong {
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+
+.adm-card small {
+  color: var(--color-ink-4);
+  font-size: 12px;
+}
+
+.adm-note {
+  margin: 14px 0 24px;
+  color: var(--color-sub);
+  font-size: 13px;
+}
+
+.adm-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.adm-panel {
+  padding: 22px;
+  border: 1px solid rgba(23, 24, 26, 0.08);
+  border-radius: 24px;
+  background: #fff;
+}
+
+.adm-panel h2 {
+  margin: 0 0 14px;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.adm-empty {
+  margin: 0;
+  color: var(--color-ink-4);
+  font-size: 14px;
+}
+
+.adm-rank {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.adm-rank li {
+  display: grid;
+  grid-template-columns: 20px minmax(90px, 160px) 1fr 40px;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.adm-rank-n,
+.adm-rank-count {
+  color: var(--color-sub);
+  font-size: 13px;
+}
+
+.adm-rank-count {
+  text-align: right;
+}
+
+.adm-rank-bar {
+  height: 8px;
+  border-radius: 4px;
+  background: #f1f1f1;
+}
+
+.adm-rank-bar i {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: #17181a;
+}
+
+.adm-days {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 160px;
+}
+
+.adm-day {
+  display: flex;
+  flex: 1;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.adm-day i {
+  display: block;
+  width: 100%;
+  border-radius: 5px;
+  background: #17181a;
+}
+
+.adm-day span {
+  color: var(--color-ink-4);
+  font-size: 11px;
+}
+
+.adm-table {
+  overflow-x: auto;
+}
+
+.adm-row {
+  display: grid;
+  grid-template-columns: 1.2fr 1.8fr 0.6fr 1fr 0.5fr;
+  gap: 12px;
+  min-width: 640px;
+  padding: 10px 0;
+  border-top: 1px solid #f1f1f1;
+  font-size: 14px;
+}
+
+.adm-row span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.adm-row-head {
+  border-top: 0;
+  color: var(--color-sub);
+  font-size: 12px;
+}
+
+@media (max-width: 760px) {
+  .adm-cols {
+    grid-template-columns: 1fr;
+  }
+}

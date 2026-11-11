@@ -6,6 +6,7 @@ import { authEnabled, signOut } from "@/lib/auth/client";
 import { releaseCopy, reserveCopy } from "@/lib/copy-gate";
 import { FREE_COPIES } from "@/lib/copy-limit";
 import { listSavedBlocks, mergeSavedBlocks, setSavedBlock } from "@/lib/saved";
+import { recordCopyEvent } from "@/lib/stats";
 import { BlockView } from "@/components/block-view";
 import { Editor } from "@/components/editor";
 import { Footer } from "@/components/footer";
@@ -279,6 +280,8 @@ export function Site() {
       return;
     }
     setCopied(block.id);
+    // Count the copy for the owner's stats; a failure here must never affect the visitor.
+    void recordCopyEvent({ data: { id: block.id } }).catch(() => {});
     setToast(!gate.signedIn && gate.used >= gate.limit ? "Last free copy" : block.name);
     window.setTimeout(() => setCopied((curr) => (curr === block.id ? null : curr)), 1600);
   }
