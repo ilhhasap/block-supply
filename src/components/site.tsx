@@ -12,6 +12,7 @@ import { Editor } from "@/components/editor";
 import { AuthModal } from "@/components/auth-modal";
 import { Footer } from "@/components/footer";
 import { MimicPage } from "@/components/mimic";
+import { hostOf, isControlEvent, kitIn } from "@/components/shadow-host";
 
 const LOCAL_SAVED = "block-supply-saved";
 const TOAST_TEXT: Record<string, string> = {
@@ -59,7 +60,7 @@ async function copyBlock(block: Block, kit: HTMLElement) {
   try {
     const { generateFromElement, inlineComputedStyles } = await import("@magicpatterns/html-to-figma");
     // A block shown scaled down is copied at its real size.
-    const fit = kit.closest<HTMLElement>("[data-fit-inner]");
+    const fit = (hostOf(kit) ?? kit).closest<HTMLElement>("[data-fit-inner]");
     const scaleBefore = fit?.style.transform ?? "";
     if (fit) fit.style.transform = "none";
     // The converter gives a frame with no fill an opaque white one, which shows up in Figma as a
@@ -521,7 +522,7 @@ export function Site() {
                           onClick={(event) => {
                             // Clicks on a live control interact with it; clicks elsewhere open the editor.
                             const target = event.target as HTMLElement;
-                            if (target.closest(".ix, [contenteditable], [role=slider], [role=textbox]")) return;
+                            if (isControlEvent(event.nativeEvent) || target.closest(".ix, [contenteditable], [role=slider], [role=textbox]")) return;
                             void navigate({ to: "/b/$id", params: { id: block.id } });
                           }}
                         >
@@ -556,7 +557,7 @@ export function Site() {
                             data-on={copied === block.id ? "true" : "false"}
                             onClick={(event) => {
                               event.stopPropagation();
-                              const kit = event.currentTarget.closest("article")?.querySelector(".kit");
+                              const kit = kitIn(event.currentTarget.closest("article"));
                               void onCopy(block, kit instanceof HTMLElement ? kit : null);
                             }}
                           >
