@@ -2159,3 +2159,15 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* Desktop: the search bar rests narrow and opens up when hovered or focused. */
+@media (min-width: 1101px) {
+  .find {
+    width: 176px;
+  }
+
+  .find:hover,
+  .find:focus-within {
+    width: 320px;
+  }
+}
