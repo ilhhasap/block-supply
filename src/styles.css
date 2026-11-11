@@ -1689,3 +1689,10 @@
     transition: none;
   }
 }
+
+/* Single column: cards span the full width (the masonry rule above only suits several columns). */
+@media (width <= 739px) {
+  .wall {
+    align-items: stretch;
+  }
+}

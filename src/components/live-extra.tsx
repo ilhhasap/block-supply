@@ -354,8 +354,8 @@ export function LabelInput() {
     <Box
       layer="Label input"
       root
-      fill
       dir="col"
+      w={280}
       justify="flex-end"
       h={60}
       pad="0 16px 8px"
