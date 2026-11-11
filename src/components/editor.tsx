@@ -4,7 +4,6 @@ import { BlockView } from "@/components/block-view";
 
 type Tune = {
   fill: "light" | "dark";
-  stroke: "off" | "on";
   corner: number;
   gap: number;
   shadow: number;
@@ -27,7 +26,7 @@ type Snap = {
 function blurb(block: Block) {
   const kind = block.cat.toLowerCase();
   const article = "aeiou".includes(kind[0] ?? "") ? "An" : "A";
-  return [`${article} ${kind} block. Same controls as every other.`, "Copy this version into Figma."];
+  return [`${article} ${kind} block. Drag a bar to tune it,`, "then copy this version into Figma."];
 }
 
 function swapColors(value: string) {
@@ -64,7 +63,6 @@ function measure(kit: HTMLElement): Tune {
   const gap = Math.round(gapAttr != null ? Number(gapAttr) : parseFloat(cs.gap) || 0);
   return {
     fill: "light",
-    stroke: "off",
     corner: radius,
     gap: Number.isFinite(gap) ? gap : 0,
     shadow: shadowBlur(cs.boxShadow),
@@ -132,10 +130,6 @@ function applyTune(kit: HTMLElement, edit: Tune, base: Tune) {
   }
   kit.style.opacity = String(edit.opacity / 100);
 
-  const ring =
-    edit.stroke === "on"
-      ? `inset 0 0 0 2px ${edit.fill === "dark" ? "rgba(255,255,255,0.88)" : "rgba(23,24,26,0.88)"}`
-      : "";
   const shadowChanged = edit.shadow !== base.shadow;
   const drop = shadowChanged
     ? edit.shadow > 0
@@ -144,8 +138,8 @@ function applyTune(kit: HTMLElement, edit: Tune, base: Tune) {
     : originalShadow && originalShadow !== "none"
       ? originalShadow
       : "";
-  if (ring || shadowChanged) {
-    kit.style.boxShadow = [ring, drop].filter(Boolean).join(", ") || "none";
+  if (shadowChanged) {
+    kit.style.boxShadow = drop || "none";
   }
 }
 
@@ -208,9 +202,34 @@ export function Editor({
         onClick={(event) => event.stopPropagation()}
       >
       <div className="bench-canvas" data-fill={tune?.fill ?? "light"}>
+        <div className="bench-toggle" role="group" aria-label="Preview fill">
+          {(["light", "dark"] as const).map((id) => (
+            <button
+              key={id}
+              type="button"
+              data-on={(tune?.fill ?? "light") === id ? "true" : "false"}
+              onClick={() => tune && setEdit({ ...tune, fill: id })}
+            >
+              {id === "light" ? "Light" : "Dark"}
+            </button>
+          ))}
+        </div>
         <div className="bench-frame" ref={frameRef}>
           <BlockView id={block.id} />
         </div>
+        {tune && baseRef.current && JSON.stringify(tune) !== JSON.stringify(baseRef.current) ? (
+          <button
+            type="button"
+            className="bench-reset"
+            aria-label="Reset changes"
+            title="Reset"
+            onClick={() => setEdit({ ...(baseRef.current as Tune) })}
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M3 8a5 5 0 1 0 1.6-3.7M3 2.5v3h3" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        ) : null}
         <button
           type="button"
           className="bench-save"
@@ -247,25 +266,7 @@ export function Editor({
 
         {tune ? (
           <div className="bench-tunes">
-            <Seg
-              label="Fill"
-              value={tune.fill}
-              options={[
-                { id: "light", label: "Light" },
-                { id: "dark", label: "Dark" },
-              ]}
-              onChange={(id) => setEdit({ ...tune, fill: id as Tune["fill"] })}
-            />
-            <Seg
-              label="Stroke"
-              value={tune.stroke}
-              options={[
-                { id: "off", label: "Off" },
-                { id: "on", label: "On" },
-              ]}
-              onChange={(id) => setEdit({ ...tune, stroke: id as Tune["stroke"] })}
-            />
-            <Slider
+            <Bar
               label="Corner"
               min={0}
               max={limits.corner}
@@ -273,7 +274,7 @@ export function Editor({
               text={`${tune.corner}px`}
               onChange={(corner) => setEdit({ ...tune, corner })}
             />
-            <Slider
+            <Bar
               label="Gap"
               min={limits.gapMin}
               max={limits.gapMax}
@@ -281,7 +282,7 @@ export function Editor({
               text={`${tune.gap}px`}
               onChange={(gap) => setEdit({ ...tune, gap })}
             />
-            <Slider
+            <Bar
               label="Shadow"
               min={0}
               max={limits.shadow}
@@ -289,7 +290,7 @@ export function Editor({
               text={`${tune.shadow}`}
               onChange={(shadow) => setEdit({ ...tune, shadow })}
             />
-            <Slider
+            <Bar
               label="Opacity"
               min={20}
               max={100}
@@ -326,37 +327,7 @@ export function Editor({
   );
 }
 
-function Seg({
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  options: { id: string; label: string }[];
-  onChange: (id: string) => void;
-}) {
-  return (
-    <div className="tune">
-      <span>{label}</span>
-      <div className="seg" role="group" aria-label={label}>
-        {options.map((option) => (
-          <button
-            key={option.id}
-            type="button"
-            data-on={value === option.id ? "true" : "false"}
-            onClick={() => onChange(option.id)}
-          >
-            {option.label}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function Slider({
+function Bar({
   label,
   min,
   max,
@@ -372,22 +343,20 @@ function Slider({
   onChange: (value: number) => void;
 }) {
   const span = Math.max(1, max - min);
-  const p = ((value - min) / span) * 100;
+  const p = Math.min(100, Math.max(0, ((value - min) / span) * 100));
   return (
-    <label className="tune">
-      <span>{label}</span>
-      <span className="tune-ctl">
-        <input
-          type="range"
-          min={min}
-          max={max}
-          value={value}
-          aria-label={label}
-          style={{ ["--p" as string]: `${p}%` }}
-          onChange={(event) => onChange(Number(event.target.value))}
-        />
-        <b>{text}</b>
-      </span>
+    <label className="bar-row" style={{ ["--p" as string]: `${p}%` }}>
+      <span className="bar-fill" aria-hidden="true" />
+      <span className="bar-label">{label}</span>
+      <span className="bar-value">{text}</span>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        value={value}
+        aria-label={label}
+        onChange={(event) => onChange(Number(event.target.value))}
+      />
     </label>
   );
 }
