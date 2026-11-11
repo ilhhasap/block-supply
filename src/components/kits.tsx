@@ -720,7 +720,7 @@ function FreePlan() {
           Paste into Figma, type stays Geist
         </Txt>
         <Txt size={13} weight={400}>
-          No account and no limits
+          Free, no card needed
         </Txt>
       </Box>
       <Box layer="Copy this card" dir="row" fill align="center" justify="center" h={44} radius={999} bg={INK}>
@@ -1481,6 +1481,796 @@ function Notice() {
   );
 }
 
+/* ── Extra blocks ─────────────────────────────────────────────── */
+
+function Spin({ size = 18, color = INK }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 18 18" fill="none" aria-hidden="true">
+      <circle cx="9" cy="9" r="7" stroke={color} strokeOpacity="0.2" strokeWidth="2" />
+      <path d="M9 2a7 7 0 0 1 7 7" stroke={color} strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function Star({ on }: { on?: boolean }) {
+  return (
+    <svg width="22" height="22" viewBox="0 0 16 16" aria-hidden="true">
+      <path
+        d="M8 1.5l1.9 3.9 4.3.6-3.1 3 .7 4.3L8 11.3l-3.8 2 .7-4.3-3.1-3 4.3-.6L8 1.5Z"
+        fill={on ? AMBER : "none"}
+        stroke={on ? AMBER : LINE}
+        strokeWidth="1.2"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function Plus({ color = PAPER }: { color?: string }) {
+  return (
+    <Icon size={18}>
+      <path d="M8 3v10M3 8h10" stroke={color} strokeWidth="1.8" strokeLinecap="round" />
+    </Icon>
+  );
+}
+
+function LabeledField({ label, value, muted }: { label: string; value: string; muted?: boolean }) {
+  return (
+    <Box layer={label} dir="col" fill gap={6}>
+      <Txt size={13} weight={500} color={MUTE}>
+        {label}
+      </Txt>
+      <Field layer={`${label} input`}>
+        <Txt size={15} weight={500} color={muted ? MUTE : INK}>
+          {value}
+        </Txt>
+      </Field>
+    </Box>
+  );
+}
+
+function SolidBtn({ label, tone = "ink" }: { label: string; tone?: "ink" | "coral" | "paper" }) {
+  const bg = tone === "coral" ? CORAL : tone === "paper" ? PAPER : INK;
+  return (
+    <Box layer={label} dir="row" fill align="center" justify="center" h={46} radius={999} bg={bg}>
+      <Txt size={15} weight={500} color={tone === "paper" ? INK : PAPER}>
+        {label}
+      </Txt>
+    </Box>
+  );
+}
+
+function LinkButton() {
+  return (
+    <Box layer="Link button" root dir="row" hug="both" align="center" gap={6}>
+      <Txt size={16} weight={500}>
+        Read the docs
+      </Txt>
+      <Arrow dir="right" />
+    </Box>
+  );
+}
+
+function DangerButton() {
+  return (
+    <Box layer="Danger buttons" root dir="row" hug="both" align="center" gap={10}>
+      <Box layer="Delete" dir="row" hug="both" align="center" justify="center" pad="12px 18px" radius={999} bg={CORAL}>
+        <Txt size={15} weight={500} color={PAPER}>
+          Delete
+        </Txt>
+      </Box>
+      <Btn label="Keep" tone="line" />
+    </Box>
+  );
+}
+
+function LoadingButton() {
+  return (
+    <Box layer="Loading button" root dir="row" hug="both" align="center" justify="center" gap={10} pad="14px 22px" radius={999} bg={INK}>
+      <Spin color={PAPER} />
+      <Txt size={16} weight={500} color={PAPER}>
+        Saving
+      </Txt>
+    </Box>
+  );
+}
+
+function ButtonGroup() {
+  const items = ["Left", "Center", "Right"];
+  return (
+    <Box layer="Button group" root dir="row" hug="both" align="center" radius={12} bg={PAPER} border={`1px solid ${LINE}`}>
+      {items.map((item, i) => (
+        <Box
+          key={item}
+          layer={item}
+          dir="row"
+          align="center"
+          justify="center"
+          pad="11px 18px"
+          bg={i === 1 ? WASH : PAPER}
+          style={{ borderLeft: i === 0 ? undefined : `1px solid ${LINE}`, borderRadius: i === 0 ? "11px 0 0 11px" : i === 2 ? "0 11px 11px 0" : 0 }}
+        >
+          <Txt size={14} weight={500} color={i === 1 ? INK : MUTE}>
+            {item}
+          </Txt>
+        </Box>
+      ))}
+    </Box>
+  );
+}
+
+function Fab() {
+  return (
+    <Box layer="Floating actions" root dir="row" hug="both" align="center" gap={12}>
+      <Box layer="Add" dir="row" w={56} h={56} radius={28} bg={INK} align="center" justify="center" shadow>
+        <Plus />
+      </Box>
+      <Box layer="New block" dir="row" hug="both" align="center" gap={8} pad="0 20px" h={56} radius={28} bg={INK} shadow>
+        <Plus />
+        <Txt size={15} weight={500} color={PAPER}>
+          New block
+        </Txt>
+      </Box>
+    </Box>
+  );
+}
+
+function BarChart() {
+  const days = [
+    ["Mon", 46],
+    ["Tue", 70],
+    ["Wed", 58],
+    ["Thu", 92],
+    ["Fri", 66],
+    ["Sat", 34],
+    ["Sun", 40],
+  ] as const;
+  return (
+    <Card layer="Bar chart" gap={18}>
+      <Box layer="Header" dir="col" gap={2}>
+        <Txt size={14} weight={600}>
+          Weekly visits
+        </Txt>
+        <Txt size={12} weight={400} color={MUTE}>
+          Compared with last week
+        </Txt>
+      </Box>
+      <Box layer="Bars" dir="row" fill align="flex-end" gap={10} h={120}>
+        {days.map(([day, height]) => (
+          <Box key={day} layer={day} dir="col" align="center" gap={8} style={{ flex: 1 }}>
+            <Box layer={`${day} bar`} fill h={height} radius={6} bg={day === "Thu" ? INK : WASH} />
+            <Txt size={11} weight={500} color={MUTE}>
+              {day}
+            </Txt>
+          </Box>
+        ))}
+      </Box>
+    </Card>
+  );
+}
+
+function Donut() {
+  const parts: [string, number, string][] = [
+    ["Design", 55, BLUE],
+    ["Build", 30, TEAL],
+    ["Review", 15, AMBER],
+  ];
+  const r = 40;
+  const c = 2 * Math.PI * r;
+  let offset = 0;
+  return (
+    <Card layer="Donut chart" dir="row" gap={24} pad={24} fill={false}>
+      <svg width="112" height="112" viewBox="0 0 112 112" aria-hidden="true">
+        <g transform="rotate(-90 56 56)">
+          {parts.map(([name, pct, color]) => {
+            const len = (pct / 100) * c;
+            const node = (
+              <circle
+                key={name}
+                cx="56"
+                cy="56"
+                r={r}
+                fill="none"
+                stroke={color}
+                strokeWidth="16"
+                strokeDasharray={`${len - 2} ${c - len + 2}`}
+                strokeDashoffset={-offset}
+              />
+            );
+            offset += len;
+            return node;
+          })}
+        </g>
+      </svg>
+      <Box layer="Legend" dir="col" gap={10}>
+        {parts.map(([name, pct, color]) => (
+          <Box key={name} layer={name} dir="row" align="center" gap={8}>
+            <Box layer={`${name} dot`} w={10} h={10} radius={5} bg={color} />
+            <Txt size={13} weight={500}>
+              {name}
+            </Txt>
+            <Txt size={13} weight={400} color={MUTE}>
+              {pct}%
+            </Txt>
+          </Box>
+        ))}
+      </Box>
+    </Card>
+  );
+}
+
+function ListRows() {
+  const rows = [
+    ["AM", "Alex Morgan", "Owner", BLUE],
+    ["JP", "Jamie Park", "Editor", CORAL],
+    ["SR", "Sam Rivera", "Viewer", TEAL],
+  ] as const;
+  return (
+    <Card layer="List rows" gap={0} pad={8} radius={18}>
+      {rows.map(([initials, name, role, color]) => (
+        <Box key={name} layer={name} dir="row" fill align="center" gap={12} pad="10px">
+          <Box layer="Avatar" dir="row" w={36} h={36} radius={18} bg={color} align="center" justify="center">
+            <Txt size={12} weight={600} color={PAPER}>
+              {initials}
+            </Txt>
+          </Box>
+          <Box layer="Name" dir="col" gap={1} style={{ flex: 1 }}>
+            <Txt size={14} weight={600}>
+              {name}
+            </Txt>
+            <Txt size={12} weight={400} color={MUTE}>
+              {role}
+            </Txt>
+          </Box>
+          <Chevron />
+        </Box>
+      ))}
+    </Card>
+  );
+}
+
+function Calendar() {
+  const cells: (number | null)[] = [...Array(3).fill(null), ...Array.from({ length: 30 }, (_, i) => i + 1)];
+  while (cells.length % 7) cells.push(null);
+  const weeks = Array.from({ length: cells.length / 7 }, (_, w) => cells.slice(w * 7, w * 7 + 7));
+  return (
+    <Card layer="Calendar" gap={10} pad={16}>
+      <Box layer="Header" dir="row" fill align="center" justify="space-between">
+        <Txt size={14} weight={600}>
+          November 2026
+        </Txt>
+        <Box layer="Arrows" dir="row" align="center" gap={4}>
+          <Arrow dir="left" color={MUTE} />
+          <Arrow dir="right" color={MUTE} />
+        </Box>
+      </Box>
+      <Box layer="Weekdays" dir="row" fill>
+        {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => (
+          <Box key={i} layer={`Weekday ${i + 1}`} dir="row" align="center" justify="center" h={28} style={{ flex: 1 }}>
+            <Txt size={11} weight={500} color={MUTE}>
+              {d}
+            </Txt>
+          </Box>
+        ))}
+      </Box>
+      {weeks.map((week, w) => (
+        <Box key={w} layer={`Week ${w + 1}`} dir="row" fill>
+          {week.map((day, i) => (
+            <Box
+              key={i}
+              layer={day ? `Day ${day}` : `Empty ${i + 1}`}
+              dir="row"
+              align="center"
+              justify="center"
+              h={34}
+              radius={17}
+              bg={day === 12 ? INK : undefined}
+              style={{ flex: 1 }}
+            >
+              <Txt size={13} weight={day === 12 ? 600 : 400} color={day === 12 ? PAPER : INK}>
+                {day ? String(day) : ""}
+              </Txt>
+            </Box>
+          ))}
+        </Box>
+      ))}
+    </Card>
+  );
+}
+
+function Timeline() {
+  const steps = [
+    ["Order placed", "Mon, 9:41", true],
+    ["Packed", "Mon, 14:05", true],
+    ["Out for delivery", "Tue, 08:30", false],
+  ] as const;
+  return (
+    <Card layer="Timeline" gap={0} pad={20}>
+      {steps.map(([title, time, done], i) => (
+        <Box key={title} layer={title} dir="row" fill align="flex-start" gap={14}>
+          <Box layer="Rail" dir="col" align="center" gap={0}>
+            <Box layer="Dot" dir="row" w={14} h={14} radius={7} bg={done ? INK : PAPER} border={done ? undefined : `2px solid ${LINE}`} />
+            {i < steps.length - 1 ? <Box layer="Line" w={2} h={32} bg={LINE} /> : null}
+          </Box>
+          <Box layer="Text" dir="col" gap={1} pad="0 0 14px 0">
+            <Txt size={14} weight={600} color={done ? INK : MUTE}>
+              {title}
+            </Txt>
+            <Txt size={12} weight={400} color={MUTE}>
+              {time}
+            </Txt>
+          </Box>
+        </Box>
+      ))}
+    </Card>
+  );
+}
+
+function Activity() {
+  const items = [
+    ["Alex published a block", "2 min ago", BLUE],
+    ["Jamie left a comment", "18 min ago", CORAL],
+    ["Sam joined the team", "1 hour ago", TEAL],
+  ] as const;
+  return (
+    <Card layer="Activity feed" gap={14}>
+      <Txt size={14} weight={600}>
+        Activity
+      </Txt>
+      {items.map(([text, time, color]) => (
+        <Box key={text} layer={text} dir="row" fill align="center" gap={12}>
+          <Box layer="Dot" w={10} h={10} radius={5} bg={color} />
+          <Box layer="Text" dir="col" gap={1}>
+            <Txt size={13} weight={500}>
+              {text}
+            </Txt>
+            <Txt size={12} weight={400} color={MUTE}>
+              {time}
+            </Txt>
+          </Box>
+        </Box>
+      ))}
+    </Card>
+  );
+}
+
+function Spinner() {
+  return (
+    <Box layer="Spinners" root dir="row" hug="both" align="center" gap={20}>
+      <Spin size={16} />
+      <Spin size={24} />
+      <Spin size={36} />
+      <Spin size={48} color={BLUE} />
+    </Box>
+  );
+}
+
+function StatusPills() {
+  const items = [
+    ["Active", GREEN, "#E7F6F2"],
+    ["Pending", AMBER, "#FBF1E1"],
+    ["Failed", CORAL, "#FBE9E6"],
+  ] as const;
+  return (
+    <Box layer="Status pills" root dir="row" hug="both" align="center" gap={8}>
+      {items.map(([label, color, bg]) => (
+        <Box key={label} layer={label} dir="row" hug="both" align="center" gap={6} pad="6px 12px" radius={999} bg={bg}>
+          <Box layer="Dot" w={7} h={7} radius={4} bg={color} />
+          <Txt size={13} weight={600} color={color}>
+            {label}
+          </Txt>
+        </Box>
+      ))}
+    </Box>
+  );
+}
+
+function Rating() {
+  return (
+    <Box layer="Rating" root dir="col" hug="both" align="center" gap={8}>
+      <Box layer="Stars" dir="row" align="center" gap={4}>
+        {[1, 2, 3, 4, 5].map((n) => (
+          <Star key={n} on={n <= 4} />
+        ))}
+      </Box>
+      <Txt size={13} weight={500} color={MUTE}>
+        4.0 from 218 reviews
+      </Txt>
+    </Box>
+  );
+}
+
+function Meter() {
+  const parts: [string, string, string][] = [
+    ["Design", "46%", BLUE],
+    ["Code", "20%", VIOLET],
+    ["Media", "12%", AMBER],
+  ];
+  return (
+    <Box layer="Storage meter" root fill dir="col" gap={12}>
+      <Box layer="Header" dir="row" fill align="center" justify="space-between">
+        <Txt size={14} weight={600}>
+          Storage
+        </Txt>
+        <Txt size={13} weight={400} color={MUTE}>
+          7.8 of 10 GB
+        </Txt>
+      </Box>
+      <Box layer="Track" dir="row" fill h={10} radius={5} bg={WASH} gap={2}>
+        {parts.map(([name, width, color]) => (
+          <Box key={name} layer={name} h={10} bg={color} style={{ width }} />
+        ))}
+      </Box>
+      <Box layer="Legend" dir="row" align="center" gap={14}>
+        {parts.map(([name, , color]) => (
+          <Box key={name} layer={`${name} key`} dir="row" align="center" gap={6}>
+            <Box layer="Dot" w={8} h={8} radius={4} bg={color} />
+            <Txt size={12} weight={500} color={MUTE}>
+              {name}
+            </Txt>
+          </Box>
+        ))}
+      </Box>
+    </Box>
+  );
+}
+
+function BottomTabs() {
+  const tabs = ["Home", "Search", "Saved", "Profile"];
+  return (
+    <Card layer="Bottom tabs" dir="row" pad="10px 12px" radius={26} gap={0} justify="space-between">
+      {tabs.map((tab, i) => (
+        <Box key={tab} layer={tab} dir="col" align="center" gap={4} pad="4px 12px" style={{ flex: 1 }}>
+          <Box layer="Icon" dir="row" w={26} h={26} radius={13} bg={i === 0 ? INK : WASH} align="center" justify="center" />
+          <Txt size={11} weight={i === 0 ? 600 : 500} color={i === 0 ? INK : MUTE}>
+            {tab}
+          </Txt>
+        </Box>
+      ))}
+    </Card>
+  );
+}
+
+function FilterChips() {
+  const chips = ["All", "Design", "Code", "Voice", "Data"];
+  return (
+    <Box layer="Filter chips" root dir="row" hug="both" align="center" gap={8}>
+      {chips.map((chip, i) => (
+        <Box
+          key={chip}
+          layer={chip}
+          dir="row"
+          hug="both"
+          align="center"
+          pad="8px 14px"
+          radius={999}
+          bg={i === 0 ? INK : PAPER}
+          border={i === 0 ? undefined : `1px solid ${LINE}`}
+        >
+          <Txt size={13} weight={500} color={i === 0 ? PAPER : INK}>
+            {chip}
+          </Txt>
+        </Box>
+      ))}
+    </Box>
+  );
+}
+
+function PricingCard() {
+  const points = ["Unlimited projects", "Team sharing", "Priority support"];
+  return (
+    <Card layer="Pricing card" gap={14}>
+      <Txt size={13} weight={500} color={MUTE}>
+        Starter
+      </Txt>
+      <Box layer="Price" dir="row" align="flex-end" gap={6}>
+        <Txt size={40} weight={600}>
+          $12
+        </Txt>
+        <Txt size={14} weight={400} color={MUTE}>
+          per month
+        </Txt>
+      </Box>
+      <Box layer="Points" dir="col" gap={8}>
+        {points.map((point) => (
+          <Box key={point} layer={point} dir="row" align="center" gap={8}>
+            <Check color={GREEN} />
+            <Txt size={13} weight={400}>
+              {point}
+            </Txt>
+          </Box>
+        ))}
+      </Box>
+      <SolidBtn label="Choose plan" />
+    </Card>
+  );
+}
+
+function Testimonial() {
+  return (
+    <Card layer="Testimonial" gap={16} pad={24}>
+      <Txt size={16} weight={500} wrap>
+        It cut our handoff time in half. The team now starts from real components, not screenshots.
+      </Txt>
+      <Box layer="Author" dir="row" align="center" gap={12}>
+        <Box layer="Avatar" dir="row" w={40} h={40} radius={20} bg={VIOLET} align="center" justify="center">
+          <Txt size={13} weight={600} color={PAPER}>
+            SR
+          </Txt>
+        </Box>
+        <Box layer="Name" dir="col" gap={1}>
+          <Txt size={14} weight={600}>
+            Sam Rivera
+          </Txt>
+          <Txt size={12} weight={400} color={MUTE}>
+            Product designer
+          </Txt>
+        </Box>
+      </Box>
+    </Card>
+  );
+}
+
+function ProductCard() {
+  return (
+    <Card layer="Product card" gap={14} pad={12} radius={24}>
+      <Box layer="Image" dir="row" fill h={120} radius={16} bg={WASH} align="center" justify="center">
+        <Box layer="Shape" w={44} h={44} radius={12} bg={CORAL} />
+      </Box>
+      <Box layer="Details" dir="row" fill align="center" justify="space-between" pad="0 6px">
+        <Box layer="Title" dir="col" gap={1}>
+          <Txt size={14} weight={600}>
+            Desk lamp
+          </Txt>
+          <Txt size={12} weight={400} color={MUTE}>
+            Matte coral
+          </Txt>
+        </Box>
+        <Txt size={15} weight={600}>
+          $48
+        </Txt>
+      </Box>
+      <SolidBtn label="Add to cart" />
+    </Card>
+  );
+}
+
+function NotificationCard() {
+  return (
+    <Card layer="Notification" dir="row" align="flex-start" gap={12} pad={16} radius={20}>
+      <Box layer="Icon" dir="row" w={36} h={36} radius={12} bg="#E7EEFE" align="center" justify="center">
+        <Box layer="Dot" w={10} h={10} radius={5} bg={BLUE} />
+      </Box>
+      <Box layer="Text" dir="col" gap={2} style={{ flex: 1 }}>
+        <Txt size={14} weight={600}>
+          New comment on Hero
+        </Txt>
+        <Txt size={13} weight={400} color={MUTE} wrap>
+          Jamie asked to tighten the spacing under the heading.
+        </Txt>
+      </Box>
+      <Txt size={12} weight={400} color={MUTE}>
+        2m
+      </Txt>
+    </Card>
+  );
+}
+
+function LoginForm() {
+  return (
+    <Card layer="Login form" gap={16} pad={24}>
+      <Box layer="Heading" dir="col" gap={2}>
+        <Txt size={20} weight={600}>
+          Welcome back
+        </Txt>
+        <Txt size={13} weight={400} color={MUTE}>
+          Log in to continue
+        </Txt>
+      </Box>
+      <LabeledField label="Email" value="name@example.com" muted />
+      <LabeledField label="Password" value="••••••••" />
+      <SolidBtn label="Log in" />
+      <Box layer="Forgot" dir="row" fill justify="center">
+        <Txt size={13} weight={500} color={MUTE}>
+          Forgot password?
+        </Txt>
+      </Box>
+    </Card>
+  );
+}
+
+function SignupForm() {
+  return (
+    <Card layer="Sign-up form" gap={14} pad={24}>
+      <Txt size={20} weight={600}>
+        Create your account
+      </Txt>
+      <LabeledField label="Name" value="Alex Morgan" />
+      <LabeledField label="Email" value="name@example.com" muted />
+      <LabeledField label="Password" value="At least 8 characters" muted />
+      <SolidBtn label="Create account" />
+      <Box layer="Terms" dir="row" fill justify="center">
+        <Txt size={12} weight={400} color={MUTE}>
+          By continuing you accept the terms.
+        </Txt>
+      </Box>
+    </Card>
+  );
+}
+
+function ContactForm() {
+  return (
+    <Card layer="Contact form" gap={14} pad={24}>
+      <Txt size={20} weight={600}>
+        Get in touch
+      </Txt>
+      <LabeledField label="Name" value="Alex Morgan" />
+      <LabeledField label="Email" value="name@example.com" muted />
+      <Box layer="Message" dir="col" fill gap={6}>
+        <Txt size={13} weight={500} color={MUTE}>
+          Message
+        </Txt>
+        <Box layer="Message input" dir="col" fill h={96} pad="12px 14px" radius={14} bg={PAPER} border={`1px solid ${LINE}`}>
+          <Txt size={15} weight={400} color={MUTE}>
+            How can we help?
+          </Txt>
+        </Box>
+      </Box>
+      <SolidBtn label="Send message" />
+    </Card>
+  );
+}
+
+function Newsletter() {
+  return (
+    <Card layer="Newsletter" gap={14} pad={24}>
+      <Box layer="Heading" dir="col" gap={2}>
+        <Txt size={18} weight={600}>
+          Stay in the loop
+        </Txt>
+        <Txt size={13} weight={400} color={MUTE}>
+          One short email a month.
+        </Txt>
+      </Box>
+      <Box layer="Subscribe" dir="row" fill align="center" gap={8} pad={5} h={54} radius={999} bg={WASH}>
+        <Box layer="Email" dir="row" align="center" pad="0 12px" style={{ flex: 1 }}>
+          <Txt size={14} weight={400} color={MUTE}>
+            name@example.com
+          </Txt>
+        </Box>
+        <Box layer="Button" dir="row" hug="both" align="center" justify="center" pad="0 18px" h={44} radius={999} bg={INK}>
+          <Txt size={14} weight={500} color={PAPER}>
+            Subscribe
+          </Txt>
+        </Box>
+      </Box>
+    </Card>
+  );
+}
+
+function Hero() {
+  return (
+    <Box layer="Hero" root fill dir="col" align="center" gap={18} pad="16px 0">
+      <Box layer="Pill" dir="row" hug="both" align="center" pad="6px 14px" radius={999} bg={WASH}>
+        <Txt size={12} weight={500} color={MUTE}>
+          New in version 2
+        </Txt>
+      </Box>
+      <Box layer="Copy" dir="col" align="center" gap={10}>
+        <Txt size={34} weight={600}>
+          Build faster, together
+        </Txt>
+        <Txt size={15} weight={400} color={MUTE}>
+          Components your whole team can edit.
+        </Txt>
+      </Box>
+      <Box layer="Actions" dir="row" align="center" gap={10}>
+        <Btn label="Get started" />
+        <Btn label="Learn more" tone="line" />
+      </Box>
+    </Box>
+  );
+}
+
+function FeatureGrid() {
+  const items = [
+    ["Fast", "Paste in a click", BLUE],
+    ["Editable", "Real auto layout", TEAL],
+    ["Consistent", "One type system", VIOLET],
+  ] as const;
+  return (
+    <Box layer="Feature grid" root fill dir="row" align="flex-start" gap={16}>
+      {items.map(([title, body, color]) => (
+        <Box key={title} layer={title} dir="col" gap={10} style={{ flex: 1 }}>
+          <Box layer="Icon" w={40} h={40} radius={12} bg={color} />
+          <Txt size={15} weight={600}>
+            {title}
+          </Txt>
+          <Txt size={13} weight={400} color={MUTE} wrap>
+            {body}
+          </Txt>
+        </Box>
+      ))}
+    </Box>
+  );
+}
+
+function CtaBanner() {
+  return (
+    <Box layer="CTA banner" root fill dir="row" align="center" justify="space-between" gap={16} pad="24px 28px" radius={24} bg={INK}>
+      <Box layer="Copy" dir="col" gap={4}>
+        <Txt size={20} weight={600} color={PAPER}>
+          Ready to start?
+        </Txt>
+        <Txt size={13} weight={400} color="#C2C1BA">
+          Free to try, no card needed.
+        </Txt>
+      </Box>
+      <Box layer="Button" dir="row" hug="both" align="center" justify="center" pad="12px 20px" radius={999} bg={PAPER}>
+        <Txt size={14} weight={600}>
+          Get started
+        </Txt>
+      </Box>
+    </Box>
+  );
+}
+
+function Faq() {
+  const items = ["How does billing work?", "Can I cancel anytime?", "Do you offer refunds?"];
+  return (
+    <Card layer="FAQ" gap={0} pad={8} radius={18}>
+      {items.map((item, i) => (
+        <Box key={item} layer={item} dir="col" fill>
+          <Box layer="Row" dir="row" fill align="center" justify="space-between" pad="14px 12px">
+            <Txt size={14} weight={500}>
+              {item}
+            </Txt>
+            <Chevron />
+          </Box>
+          {i < items.length - 1 ? <Box layer="Rule" fill h={1} bg={LINE} /> : null}
+        </Box>
+      ))}
+    </Card>
+  );
+}
+
+function Footer() {
+  const cols: [string, string[]][] = [
+    ["Product", ["Blocks", "Pricing", "Changelog"]],
+    ["Company", ["About", "Careers", "Contact"]],
+  ];
+  return (
+    <Box layer="Footer" root fill dir="col" gap={20} pad="4px 0">
+      <Box layer="Columns" dir="row" fill align="flex-start" justify="space-between" gap={24}>
+        <Box layer="Brand" dir="col" gap={4}>
+          <Txt size={15} weight={600}>
+            Supply
+          </Txt>
+          <Txt size={12} weight={400} color={MUTE}>
+            Blocks for Figma
+          </Txt>
+        </Box>
+        {cols.map(([title, links]) => (
+          <Box key={title} layer={title} dir="col" gap={8}>
+            <Txt size={12} weight={600} color={MUTE}>
+              {title}
+            </Txt>
+            {links.map((link) => (
+              <Txt key={link} size={13} weight={400}>
+                {link}
+              </Txt>
+            ))}
+          </Box>
+        ))}
+      </Box>
+      <Box layer="Rule" fill h={1} bg={LINE} />
+      <Txt size={12} weight={400} color={MUTE}>
+        © 2026 Supply. All rights reserved.
+      </Txt>
+    </Box>
+  );
+}
+
 const VIEWS: Record<string, () => ReactNode> = {
   "primary-button": Primary,
   "button-set": ButtonSet,
@@ -1531,6 +2321,36 @@ const VIEWS: Record<string, () => ReactNode> = {
   upload: Upload,
   skeleton: Skeleton,
   notice: Notice,
+  "link-button": LinkButton,
+  "danger-button": DangerButton,
+  "loading-button": LoadingButton,
+  "button-group": ButtonGroup,
+  fab: Fab,
+  "bar-chart": BarChart,
+  donut: Donut,
+  "list-rows": ListRows,
+  calendar: Calendar,
+  timeline: Timeline,
+  activity: Activity,
+  spinner: Spinner,
+  "status-pills": StatusPills,
+  rating: Rating,
+  meter: Meter,
+  "bottom-tabs": BottomTabs,
+  "filter-chips": FilterChips,
+  pricing: PricingCard,
+  testimonial: Testimonial,
+  product: ProductCard,
+  notification: NotificationCard,
+  "login-form": LoginForm,
+  "signup-form": SignupForm,
+  "contact-form": ContactForm,
+  newsletter: Newsletter,
+  hero: Hero,
+  "feature-grid": FeatureGrid,
+  "cta-banner": CtaBanner,
+  faq: Faq,
+  footer: Footer,
 };
 
 export function BlockView({ id }: { id: string }) {

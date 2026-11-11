@@ -6,7 +6,9 @@ export type Category =
   | "Overlay"
   | "Nav"
   | "Data"
-  | "Status";
+  | "Status"
+  | "Form"
+  | "Section";
 
 export type Block = {
   id: string;
@@ -25,6 +27,8 @@ export const CATEGORIES: Category[] = [
   "Nav",
   "Data",
   "Status",
+  "Form",
+  "Section",
 ];
 
 export const BLOCKS: Block[] = [
@@ -77,4 +81,34 @@ export const BLOCKS: Block[] = [
   { id: "upload", name: "Upload", cat: "Input", h: 320 },
   { id: "skeleton", name: "Skeleton", cat: "Status", h: 260 },
   { id: "notice", name: "Inline notice", cat: "Status", h: 200 },
+  { id: "link-button", name: "Link button", cat: "Button", h: 200 },
+  { id: "danger-button", name: "Danger buttons", cat: "Button", h: 200 },
+  { id: "loading-button", name: "Loading button", cat: "Button", h: 200 },
+  { id: "button-group", name: "Button group", cat: "Button", h: 200 },
+  { id: "fab", name: "Floating actions", cat: "Button", h: 220 },
+  { id: "bar-chart", name: "Bar chart", cat: "Data", h: 360 },
+  { id: "donut", name: "Donut chart", cat: "Data", h: 320 },
+  { id: "list-rows", name: "List rows", cat: "Data", h: 340 },
+  { id: "calendar", name: "Calendar", cat: "Data", h: 460 },
+  { id: "timeline", name: "Timeline", cat: "Data", h: 340 },
+  { id: "activity", name: "Activity feed", cat: "Data", h: 340 },
+  { id: "spinner", name: "Spinners", cat: "Status", h: 200 },
+  { id: "status-pills", name: "Status pills", cat: "Status", h: 200 },
+  { id: "rating", name: "Rating", cat: "Status", h: 220 },
+  { id: "meter", name: "Storage meter", cat: "Status", h: 260 },
+  { id: "bottom-tabs", name: "Bottom tabs", cat: "Nav", h: 220 },
+  { id: "filter-chips", name: "Filter chips", cat: "Nav", h: 200 },
+  { id: "pricing", name: "Pricing card", cat: "Card", h: 440 },
+  { id: "testimonial", name: "Testimonial", cat: "Card", h: 340 },
+  { id: "product", name: "Product card", cat: "Card", h: 440 },
+  { id: "notification", name: "Notification", cat: "Card", h: 240 },
+  { id: "login-form", name: "Login form", cat: "Form", h: 480, badge: "New" },
+  { id: "signup-form", name: "Sign-up form", cat: "Form", h: 500 },
+  { id: "contact-form", name: "Contact form", cat: "Form", h: 520 },
+  { id: "newsletter", name: "Newsletter", cat: "Form", h: 300 },
+  { id: "hero", name: "Hero", cat: "Section", h: 380, badge: "New" },
+  { id: "feature-grid", name: "Feature grid", cat: "Section", h: 260 },
+  { id: "cta-banner", name: "CTA banner", cat: "Section", h: 240 },
+  { id: "faq", name: "FAQ", cat: "Section", h: 320 },
+  { id: "footer", name: "Footer", cat: "Section", h: 340 },
 ];

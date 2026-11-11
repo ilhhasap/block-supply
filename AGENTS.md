@@ -13,6 +13,9 @@ TanStack Start + Router, React 19, Tailwind v4, Better Auth, Postgres (PGLite lo
 ## Auth
 Better Auth at `/api/auth/*`: email/password, plus optional Google/GitHub.
 See the header of `src/lib/auth/server.ts` for the environment variables.
+Email verification: set `RESEND_API_KEY` (and `EMAIL_FROM`) to send verification emails and require
+a verified email to log in. Without the key, the link is logged to the server console and
+verification is not enforced (local dev).
 `VITE_AUTH_ENABLED=false` disables auth and uses a shared dev user.
 Protect server functions with `authMiddleware` (`src/lib/auth/middleware.ts`).
 
