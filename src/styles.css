@@ -1904,15 +1904,10 @@ a.group-tab {
   align-items: center;
 }
 
-/* The pink glow at the top of the page scrolls away with the content, so it no longer sits behind the
-   navbar once you have scrolled. The green glow at the bottom stays fixed. The blue and orange glows
-   were removed. */
+/* Only the soft green glow at the bottom corner remains; the blue, orange and pink glows were removed
+   so nothing tints the area behind the navbar. */
 body {
   background-image: radial-gradient(760px 520px at 96% 108%, rgba(186, 228, 212, 0.72), transparent 52%);
 }
 
-.scroll {
-  background-image: radial-gradient(860px 500px at 100% -50px, rgba(255, 210, 198, 0.8), transparent 56%);
-  background-attachment: local;
-  background-repeat: no-repeat;
-}
+
