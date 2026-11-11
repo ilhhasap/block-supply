@@ -11,6 +11,8 @@
  *   DATABASE_URL         Postgres connection string (omit locally -> PGLite)
  *   GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET   optional
  *   GITHUB_CLIENT_ID / GITHUB_CLIENT_SECRET   optional
+ *   RESEND_API_KEY / EMAIL_FROM   enable verification emails (see `email.server.ts`);
+ *                        when set, sign-in requires a verified email
  *   VITE_AUTH_PROVIDERS  which social buttons to show, e.g. "google,github"
  *   VITE_AUTH_ENABLED    "false" turns auth off (shared dev user)
  *
@@ -24,6 +26,7 @@ import { randomBytes } from "node:crypto";
 import { Pool } from "pg";
 import { ensureDbReady, getPglite } from "../db";
 import { emailAndPasswordEnabled } from "./email-password";
+import { emailConfigured, sendEmail, verificationEmail } from "./email.server";
 import { pgliteDialect } from "./pglite-dialect";
 
 // Kick (and share) PGLite bootstrap as soon as the auth server module loads.
@@ -36,6 +39,9 @@ const env = (key: string): string | undefined => {
 };
 
 const isProduction = process.env.NODE_ENV === "production";
+if (isProduction && !emailConfigured) {
+  console.error("[auth] RESEND_API_KEY is not set — email verification is NOT enforced.");
+}
 
 /**
  * Dev secret must outlive module reloads (HMR) or every session dies mid-dev,
@@ -103,7 +109,20 @@ export const auth = betterAuth({
   // Cache the session in a short-lived signed cookie so reads skip the DB.
   session: { cookieCache: { enabled: true, maxAge: 300 } },
 
-  ...(emailAndPasswordEnabled ? { emailAndPassword: { enabled: true } } : {}),
+  // With an email provider configured, accounts must verify their address
+  // before signing in. Without one (local dev) the link is logged instead and
+  // verification is not enforced, so nobody gets locked out.
+  ...(emailAndPasswordEnabled
+    ? { emailAndPassword: { enabled: true, requireEmailVerification: emailConfigured } }
+    : {}),
+  emailVerification: {
+    sendOnSignUp: true,
+    sendOnSignIn: emailConfigured,
+    autoSignInAfterVerification: true,
+    sendVerificationEmail: async ({ user, url }) => {
+      await sendEmail({ to: user.email, ...verificationEmail(url) });
+    },
+  },
 
   advanced: { cookiePrefix: "supply-auth" },
 

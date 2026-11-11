@@ -19,6 +19,8 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [needsVerify, setNeedsVerify] = useState(false);
   const [busy, setBusy] = useState(false);
   const [gated] = useState(() => {
     if (typeof window === "undefined") return false;
@@ -33,6 +35,8 @@ function LoginPage() {
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
     setError("");
+    setNotice("");
+    setNeedsVerify(false);
     const nextEmail = email.trim();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(nextEmail)) {
       setError("Enter a valid email.");
@@ -50,10 +54,34 @@ function LoginPage() {
         : await authClient.signIn.email({ email: nextEmail, password, callbackURL: "/" });
     setBusy(false);
     if (result.error) {
+      if (result.error.status === 403) {
+        setNeedsVerify(true);
+        setError("Verify your email first. Check your inbox for the link.");
+        return;
+      }
       setError(result.error.message || (mode === "signup" ? "Could not create the account." : "Could not log in."));
       return;
     }
+    // Sign-up with required verification returns no session token.
+    if (mode === "signup" && !(result.data as { token?: string | null } | null)?.token) {
+      setNotice(`We sent a verification link to ${nextEmail}. Open it, then log in.`);
+      setMode("login");
+      setPassword("");
+      return;
+    }
     await navigate({ to: "/" });
+  }
+
+  async function resendVerification() {
+    setBusy(true);
+    const { error: err } = await authClient.sendVerificationEmail({ email: email.trim(), callbackURL: "/" });
+    setBusy(false);
+    if (err) setError(err.message || "Could not send the email.");
+    else {
+      setError("");
+      setNeedsVerify(false);
+      setNotice("Verification email sent. Check your inbox.");
+    }
   }
 
   return (
@@ -112,7 +140,13 @@ function LoginPage() {
                   onChange={(event) => setPassword(event.target.value)}
                 />
               </label>
+              {notice ? <p className="login-note">{notice}</p> : null}
               {error ? <p className="login-error">{error}</p> : null}
+              {needsVerify ? (
+                <button type="button" className="login-switch" disabled={busy} onClick={() => void resendVerification()}>
+                  Resend verification email
+                </button>
+              ) : null}
               <button type="submit" className="login-send" disabled={busy}>
                 {busy ? "Please wait" : mode === "signup" ? "Create account" : "Log in"}
               </button>
