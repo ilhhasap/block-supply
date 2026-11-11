@@ -9,12 +9,26 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SiteRouteImport } from './routes/_site'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as Char123PageChar125RouteImport } from './routes/{-$page}'
+import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as SiteChar123PageChar125RouteImport } from './routes/_site.{-$page}'
+import { Route as SiteBIdRouteImport } from './routes/_site.b.$id'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
+const SiteRoute = SiteRouteImport.update({
+  id: '/_site',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   id: '/forgot-password',
   path: '/forgot-password',
@@ -30,10 +44,25 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
   path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
-const Char123PageChar125Route = Char123PageChar125RouteImport.update({
+const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
+  id: '/robots.txt',
+  path: '/robots.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SiteChar123PageChar125Route = SiteChar123PageChar125RouteImport.update({
   id: '/{-$page}',
   path: '/{-$page}',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => SiteRoute,
+} as any)
+const SiteBIdRoute = SiteBIdRouteImport.update({
+  id: '/b/$id',
+  path: '/b/$id',
+  getParentRoute: () => SiteRoute,
 } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
@@ -42,61 +71,108 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof SiteRouteWithChildren
+  '/admin': typeof AdminRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/{-$page}': typeof Char123PageChar125Route
+  '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/{-$page}': typeof SiteChar123PageChar125Route
+  '/b/$id': typeof SiteBIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof SiteRouteWithChildren
+  '/admin': typeof AdminRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/{-$page}': typeof Char123PageChar125Route
+  '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/{-$page}': typeof SiteChar123PageChar125Route
+  '/b/$id': typeof SiteBIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/_site': typeof SiteRouteWithChildren
+  '/admin': typeof AdminRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/{-$page}': typeof Char123PageChar125Route
+  '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/_site/{-$page}': typeof SiteChar123PageChar125Route
+  '/_site/b/$id': typeof SiteBIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/'
+    | '/admin'
     | '/forgot-password'
     | '/login'
     | '/reset-password'
+    | '/robots.txt'
+    | '/sitemap.xml'
     | '/{-$page}'
+    | '/b/$id'
     | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
+    | '/admin'
     | '/forgot-password'
     | '/login'
     | '/reset-password'
+    | '/robots.txt'
+    | '/sitemap.xml'
     | '/{-$page}'
+    | '/b/$id'
     | '/api/auth/$'
   id:
     | '__root__'
+    | '/_site'
+    | '/admin'
     | '/forgot-password'
     | '/login'
     | '/reset-password'
-    | '/{-$page}'
+    | '/robots.txt'
+    | '/sitemap.xml'
+    | '/_site/{-$page}'
+    | '/_site/b/$id'
     | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  SiteRoute: typeof SiteRouteWithChildren
+  AdminRoute: typeof AdminRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
-  Char123PageChar125Route: typeof Char123PageChar125Route
+  RobotsDottxtRoute: typeof RobotsDottxtRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/_site': {
+      id: '/_site'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof SiteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/forgot-password': {
       id: '/forgot-password'
       path: '/forgot-password'
@@ -118,12 +194,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/{-$page}': {
-      id: '/{-$page}'
+    '/robots.txt': {
+      id: '/robots.txt'
+      path: '/robots.txt'
+      fullPath: '/robots.txt'
+      preLoaderRoute: typeof RobotsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_site/{-$page}': {
+      id: '/_site/{-$page}'
       path: '/{-$page}'
       fullPath: '/{-$page}'
-      preLoaderRoute: typeof Char123PageChar125RouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof SiteChar123PageChar125RouteImport
+      parentRoute: typeof SiteRoute
+    }
+    '/_site/b/$id': {
+      id: '/_site/b/$id'
+      path: '/b/$id'
+      fullPath: '/b/$id'
+      preLoaderRoute: typeof SiteBIdRouteImport
+      parentRoute: typeof SiteRoute
     }
     '/api/auth/$': {
       id: '/api/auth/$'
@@ -135,11 +232,26 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface SiteRouteChildren {
+  SiteChar123PageChar125Route: typeof SiteChar123PageChar125Route
+  SiteBIdRoute: typeof SiteBIdRoute
+}
+
+const SiteRouteChildren: SiteRouteChildren = {
+  SiteChar123PageChar125Route: SiteChar123PageChar125Route,
+  SiteBIdRoute: SiteBIdRoute,
+}
+
+const SiteRouteWithChildren = SiteRoute._addFileChildren(SiteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
+  SiteRoute: SiteRouteWithChildren,
+  AdminRoute: AdminRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
-  Char123PageChar125Route: Char123PageChar125Route,
+  RobotsDottxtRoute: RobotsDottxtRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport

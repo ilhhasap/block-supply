@@ -1,5 +1,4 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
-import { Site } from "@/components/site";
 
 /** `/` is the component library; `/sections` and `/pricing` are the other two pages. */
 const PAGES = ["sections", "pricing"];
@@ -15,10 +14,7 @@ const TITLES: Record<string, { title: string; description: string }> = {
   },
 };
 
-export const Route = createFileRoute("/{-$page}")({
-  validateSearch: (search: Record<string, unknown>): { auth?: "login" | "signup" } => ({
-    auth: search.auth === "login" || search.auth === "signup" ? search.auth : undefined,
-  }),
+export const Route = createFileRoute("/_site/{-$page}")({
   beforeLoad: ({ params }) => {
     if (params.page && !PAGES.includes(params.page)) throw notFound();
   },
@@ -34,5 +30,4 @@ export const Route = createFileRoute("/{-$page}")({
       ],
     };
   },
-  component: Site,
 });
