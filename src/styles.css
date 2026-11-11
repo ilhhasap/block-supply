@@ -59,18 +59,40 @@
   place-items: center;
   padding: 24px;
   overflow: auto;
-  background: rgba(255, 255, 255, 0.24);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
+  background: rgba(244, 244, 245, 0.6);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  animation: bench-fade 0.18s ease-out both;
 }
 
 .bench-sheet {
   display: flex;
   align-items: stretch;
   gap: 12px;
-  width: 860px;
+  width: 880px;
   max-width: 100%;
   max-height: calc(100vh - 48px);
+  animation: bench-in 0.26s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes bench-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes bench-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bench,
+  .bench-sheet {
+    animation: none;
+  }
 }
 
 .bench-canvas {
@@ -79,10 +101,12 @@
   flex: 1 1 auto;
   align-self: stretch;
   min-width: 0;
+  min-height: 440px;
   place-items: center;
-  padding: 32px;
+  padding: 64px 40px;
   border-radius: 28px;
-  background: #e6e6e8;
+  background: #ececee;
+  transition: background 0.2s;
 }
 
 .bench-canvas[data-fill="dark"] {
@@ -97,28 +121,104 @@
   justify-content: center;
 }
 
-.bench-save {
+.bench-toggle {
   position: absolute;
-  top: 16px;
-  right: 16px;
+  top: 14px;
+  left: 14px;
+  display: flex;
+  height: 34px;
+  padding: 2px;
+  border-radius: 17px;
+  background: rgba(23, 24, 26, 0.06);
+}
+
+.bench-toggle button {
+  height: 30px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 15px;
+  background: transparent;
+  color: #6a6a6e;
+  font: 500 13px/1 var(--font-sans);
+  transition:
+    background 0.16s,
+    color 0.16s;
+}
+
+.bench-toggle button[data-on="true"] {
+  background: #fff;
+  color: var(--color-ink);
+  box-shadow: 0 1px 2px rgba(23, 24, 26, 0.08);
+}
+
+.bench-canvas[data-fill="dark"] .bench-toggle {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.bench-canvas[data-fill="dark"] .bench-toggle button {
+  color: #9a9a9e;
+}
+
+.bench-canvas[data-fill="dark"] .bench-toggle button[data-on="true"] {
+  background: #2c2c2e;
+  color: #fff;
+  box-shadow: none;
+}
+
+.bench-save,
+.bench-reset {
+  position: absolute;
   display: grid;
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   place-items: center;
   border: 0;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.72);
+  border-radius: 18px;
+  background: transparent;
+  color: var(--color-ink-3);
+  transition:
+    background 0.16s,
+    color 0.16s,
+    transform 0.12s;
+}
+
+.bench-save {
+  top: 13px;
+  right: 14px;
+}
+
+.bench-reset {
+  right: 14px;
+  bottom: 14px;
+}
+
+.bench-save:hover,
+.bench-reset:hover {
+  background: rgba(23, 24, 26, 0.06);
   color: var(--color-ink);
 }
 
-.bench-canvas[data-fill="dark"] .bench-save {
-  background: rgba(255, 255, 255, 0.12);
+.bench-save:active,
+.bench-reset:active {
+  transform: scale(0.92);
+}
+
+.bench-save[data-on="true"] {
+  color: var(--color-ink);
+}
+
+.bench-canvas[data-fill="dark"] :is(.bench-save, .bench-reset) {
+  color: #9a9a9e;
+}
+
+.bench-canvas[data-fill="dark"] :is(.bench-save, .bench-reset):hover {
+  background: rgba(255, 255, 255, 0.1);
   color: #fff;
 }
 
 .bench-panel {
   display: flex;
-  width: 380px;
+  width: 340px;
   flex: none;
   flex-direction: column;
   align-self: stretch;
@@ -126,13 +226,10 @@
   padding: 20px;
   overflow: auto;
   border-radius: 28px;
-  background: #ececee;
+  background: #f6f6f7;
 }
 
 .bench-panel :is(h2, p, span, b, button) {
-  text-box: trim-both cap alphabetic;
-  text-box-trim: trim-both;
-  text-box-edge: cap alphabetic;
   letter-spacing: 0;
 }
 
@@ -145,14 +242,10 @@
 }
 
 .bench-head h2 {
-  display: flex;
-  align-items: center;
-  height: 16px;
   margin: 0;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 600;
-  letter-spacing: 0;
-  line-height: 16px;
+  line-height: 24px;
 }
 
 .bench-x {
@@ -163,135 +256,93 @@
   place-items: center;
   border: 0;
   border-radius: 16px;
-  background: transparent;
+  background: rgba(23, 24, 26, 0.05);
   color: var(--color-ink-3);
+  transition:
+    background 0.16s,
+    transform 0.12s;
 }
 
 .bench-x:hover {
-  background: rgba(23, 24, 26, 0.06);
+  background: rgba(23, 24, 26, 0.09);
   color: var(--color-ink);
+}
+
+.bench-x:active {
+  transform: scale(0.92);
 }
 
 .bench-panel > p {
   display: flex;
   flex-direction: column;
-  margin: 16px 0 0;
-  color: #6d6c67;
+  margin: 12px 0 0;
+  color: #7a7a7e;
   font-size: 14px;
   line-height: 20px;
-}
-
-.bench-panel > p span {
-  display: flex;
-  align-items: center;
-  height: 20px;
-  white-space: nowrap;
 }
 
 .bench-tunes {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  margin-top: 24px;
+  gap: 8px;
+  margin-top: 20px;
 }
 
-.tune {
+.bar-row {
+  position: relative;
   display: flex;
+  height: 44px;
   align-items: center;
   justify-content: space-between;
-  height: 36px;
-  gap: 12px;
-}
-
-.tune > span:first-child {
-  width: 72px;
-  flex: none;
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 20px;
-}
-
-.seg {
-  display: flex;
-  height: 36px;
-  padding: 2px;
-  border-radius: 18px;
-  background: #dedee1;
-}
-
-.seg button {
-  height: 32px;
   padding: 0 14px;
-  border: 0;
-  border-radius: 16px;
-  background: transparent;
-  color: #6a6a6e;
-  font: 500 14px/20px var(--font-sans);
-}
-
-.seg button[data-on="true"] {
-  background: #fff;
-  color: var(--color-ink);
-  box-shadow:
-    0 1px 1px rgba(23, 24, 26, 0.06),
-    0 4px 10px rgba(23, 24, 26, 0.08);
-}
-
-.tune-ctl {
-  display: flex;
-  flex: 1;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-  height: 36px;
-}
-
-.tune-ctl input[type="range"] {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 100%;
-  height: 36px;
-  margin: 0;
-  border: 0;
-  border-radius: 12px;
-  background: linear-gradient(90deg, #c4c4c8 0 var(--p), #e3e3e6 var(--p) 100%);
-  cursor: pointer;
-}
-
-.tune-ctl input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 2px;
-  height: 36px;
-  border: 0;
-  background: transparent;
-}
-
-.tune-ctl input[type="range"]::-moz-range-thumb {
-  width: 2px;
-  height: 36px;
-  border: 0;
-  background: transparent;
-}
-
-.tune-ctl input[type="range"]::-moz-range-track {
-  height: 36px;
-  border: 0;
-  background: transparent;
-}
-
-.tune-ctl b {
-  display: grid;
-  width: 56px;
-  min-width: 56px;
-  height: 36px;
-  flex: none;
-  place-items: center;
-  border-radius: 12px;
-  background: #f6f6f7;
+  overflow: hidden;
+  border-radius: 10px;
+  background: rgba(23, 24, 26, 0.05);
   font-size: 14px;
   font-weight: 500;
   line-height: 20px;
+  transition: background 0.16s;
+}
+
+.bar-row:hover {
+  background: rgba(23, 24, 26, 0.07);
+}
+
+.bar-row:focus-within {
+  outline: 2px solid #0a84ff;
+  outline-offset: 2px;
+}
+
+.bar-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--p);
+  background: rgba(23, 24, 26, 0.09);
+  transition: width 0.12s ease-out;
+}
+
+.bar-row:active .bar-fill {
+  transition: none;
+}
+
+.bar-label {
+  position: relative;
+  color: #6a6a6e;
+}
+
+.bar-value {
+  position: relative;
   font-variant-numeric: tabular-nums;
+}
+
+.bar-row input[type="range"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: ew-resize;
 }
 
 .bench-actions {
@@ -306,30 +357,41 @@
 .bench-copy {
   display: inline-flex;
   width: 100%;
+  height: 44px;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border-radius: 24px;
+  border-radius: 22px;
   font: 500 14px/20px var(--font-sans);
+  transition:
+    background 0.16s,
+    transform 0.12s,
+    filter 0.16s;
 }
 
 .bench-share {
-  height: 44px;
-  border: 1px solid rgba(23, 24, 26, 0.08);
-  background: #fff;
-  color: var(--color-ink);
+  border: 1px solid rgba(23, 24, 26, 0.14);
+  background: transparent;
+  color: #4a4a4e;
+}
+
+.bench-share:hover {
+  background: rgba(23, 24, 26, 0.04);
 }
 
 .bench-copy {
-  height: 48px;
   border: 0;
   background: #17181a;
   color: #fff;
 }
 
-.bench-copy:hover,
-.bench-share:hover {
-  filter: brightness(1.03);
+.bench-copy:hover {
+  filter: brightness(1.12);
+}
+
+.bench-share:active,
+.bench-copy:active {
+  transform: scale(0.98);
 }
 
 @media (max-width: 860px) {
@@ -740,4 +802,36 @@
   box-shadow: none;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
+}
+
+/* Library cards: gentle lift and press feedback (translate only, so copied layouts are unaffected). */
+.card {
+  transition:
+    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.22s;
+}
+.card:hover {
+  transform: translateY(-2px);
+}
+.card:active {
+  transform: translateY(0) scale(0.995);
+}
+.save,
+.copy {
+  transition:
+    opacity 0.16s,
+    background 0.16s,
+    transform 0.12s;
+}
+.save:active,
+.copy:active {
+  transform: scale(0.95);
+}
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .card:hover,
+  .card:active {
+    transform: none;
+    transition: none;
+  }
 }
