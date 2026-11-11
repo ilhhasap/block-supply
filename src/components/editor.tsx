@@ -257,7 +257,8 @@ export function Editor({
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") requestClose();
+      // An account modal opened over the editor takes the Escape first.
+      if (event.key === "Escape" && !document.querySelector(".auth-overlay")) requestClose();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);

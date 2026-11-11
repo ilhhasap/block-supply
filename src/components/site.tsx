@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate, useParams } from "@tanstack/react-router";
+import { Link, useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { BLOCKS, GROUPS, GROUP_CATEGORIES, groupOf, type Block, type Category, type Group } from "@/data/blocks";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { authEnabled, signOut } from "@/lib/auth/client";
@@ -9,6 +9,7 @@ import { listSavedBlocks, mergeSavedBlocks, setSavedBlock } from "@/lib/saved";
 import { recordCopyEvent } from "@/lib/stats";
 import { BlockView } from "@/components/block-view";
 import { Editor } from "@/components/editor";
+import { AuthModal } from "@/components/auth-modal";
 import { Footer } from "@/components/footer";
 
 const LOCAL_SAVED = "block-supply-saved";
@@ -123,6 +124,16 @@ export function Site() {
   const idleTimer = useRef<number | undefined>(undefined);
   useEffect(() => () => window.clearTimeout(idleTimer.current), []);
   const [gate, setGate] = useState<"save" | "copy" | null>(null);
+  const [auth, setAuth] = useState<{ mode: "login" | "signup"; note?: string } | null>(null);
+  const { auth: authParam } = useSearch({ strict: false }) as { auth?: string };
+
+  // `/?auth=login` (the old /login link, emails) opens the modal, then drops the parameter.
+  useEffect(() => {
+    if (authParam !== "login" && authParam !== "signup") return;
+    if (authPending) return;
+    if (!currentUser) setAuth({ mode: authParam });
+    void navigate({ to: ".", search: (prev: Record<string, unknown>) => ({ ...prev, auth: undefined }), replace: true });
+  }, [authParam, authPending, currentUser, navigate]);
 
   useEffect(() => {
     const sync = () => setCols(columnsFor(window.innerWidth));
@@ -379,6 +390,7 @@ export function Site() {
         </label>
         <div className="tools">
           <AuthSlot
+            onLogin={() => setAuth({ mode: "login" })}
             savedCount={saved.length}
             onSaved={() => {
               setOnlySaved(true);
@@ -411,7 +423,7 @@ export function Site() {
       >
         <div className="body">
           {page === "pricing" ? (
-            <FreePage onBrowse={goLibrary} signedIn={Boolean(currentUser)} />
+            <FreePage onBrowse={goLibrary} signedIn={Boolean(currentUser)} onSignup={() => setAuth({ mode: "signup" })} />
           ) : (
             <>
               <header className="hero">
@@ -586,17 +598,23 @@ export function Site() {
           onClose={() => setGate(null)}
           onLogin={() => {
             try {
-              if (gate === "copy") {
-                window.sessionStorage.setItem("supply-copy-gate", "1");
-                window.sessionStorage.setItem(PENDING_COPY, "1");
-              }
+              if (gate === "copy") window.sessionStorage.setItem(PENDING_COPY, "1");
             } catch {
               /* storage unavailable */
             }
-            void navigate({ to: "/login" });
+            setAuth({
+              mode: "login",
+              note:
+                gate === "copy"
+                  ? `You’ve used your ${FREE_COPIES} free copies. Log in to keep copying. It stays free.`
+                  : "Log in to save blocks and find them again anywhere. It stays free.",
+            });
+            setGate(null);
           }}
         />
       ) : null}
+
+      {auth ? <AuthModal initialMode={auth.mode} note={auth.note} onClose={() => setAuth(null)} /> : null}
 
       <div className="toast" data-on={toast ? "true" : "false"} role="status" aria-live="polite">
         <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
@@ -671,7 +689,7 @@ function Questions() {
   );
 }
 
-function FreePage({ onBrowse, signedIn }: { onBrowse: () => void; signedIn: boolean }) {
+function FreePage({ onBrowse, signedIn, onSignup }: { onBrowse: () => void; signedIn: boolean; onSignup: () => void }) {
   const steps: [string, string, string][] = [
     ["1", "Copy a block", `Press Copy Figma on any block. The first ${FREE_COPIES} copies need no account.`],
     ["2", "Log in, it’s free", `After ${FREE_COPIES} copies, log in with your email or Google to keep going. There is nothing to pay.`],
@@ -691,9 +709,9 @@ function FreePage({ onBrowse, signedIn }: { onBrowse: () => void; signedIn: bool
             Browse the blocks
           </button>
           {signedIn ? null : (
-            <Link to="/login" className="free-ghost">
+            <button type="button" className="free-ghost" onClick={onSignup}>
               Create a free account
-            </Link>
+            </button>
           )}
         </div>
       </header>
@@ -750,7 +768,7 @@ function FreePage({ onBrowse, signedIn }: { onBrowse: () => void; signedIn: bool
   );
 }
 
-function AuthSlot({ savedCount, onSaved }: { savedCount: number; onSaved: () => void }) {
+function AuthSlot({ savedCount, onSaved, onLogin }: { savedCount: number; onSaved: () => void; onLogin: () => void }) {
   const { user, isPending } = useCurrentUserState();
   const [open, setOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
@@ -776,9 +794,9 @@ function AuthSlot({ savedCount, onSaved }: { savedCount: number; onSaved: () => 
   if (isPending) return <span className="auth-skel" aria-hidden="true" />;
   if (!user) {
     return (
-      <Link to="/login" className="login-link">
+      <button type="button" className="login-link" onClick={onLogin}>
         Log in
-      </Link>
+      </button>
     );
   }
   const label = user.displayName ?? user.primaryEmail ?? "Account";
