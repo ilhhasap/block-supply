@@ -43,3 +43,11 @@ export function verificationEmail(url: string) {
     html: `<p>Confirm your email to finish creating your account.</p><p><a href="${escapeHtml(url)}">Verify email</a></p><p>If you did not sign up, ignore this message.</p>`,
   };
 }
+
+export function resetPasswordEmail(url: string) {
+  return {
+    subject: "Reset your Block Supply password",
+    text: `Use this link to choose a new password (valid for 1 hour):\n\n${url}\n\nIf you did not ask for this, ignore this message. Your password stays the same.`,
+    html: `<p>Use this link to choose a new password. It is valid for 1 hour.</p><p><a href="${escapeHtml(url)}">Reset password</a></p><p>If you did not ask for this, ignore this message. Your password stays the same.</p>`,
+  };
+}

@@ -1,4 +1,4 @@
-import { createFileRoute, Navigate, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Navigate, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { authClient, authEnabled, AUTH_PROVIDERS, signIn } from "@/lib/auth/client";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
@@ -140,6 +140,11 @@ function LoginPage() {
                   onChange={(event) => setPassword(event.target.value)}
                 />
               </label>
+              {mode === "login" ? (
+                <Link to="/forgot-password" className="login-link">
+                  Forgot password?
+                </Link>
+              ) : null}
               {notice ? <p className="login-note">{notice}</p> : null}
               {error ? <p className="login-error">{error}</p> : null}
               {needsVerify ? (
