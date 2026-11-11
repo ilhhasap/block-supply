@@ -5,7 +5,7 @@ import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { UserButton } from "@/lib/auth/gates";
 import { releaseCopy, reserveCopy } from "@/lib/copy-gate";
 import { FREE_COPIES } from "@/lib/copy-limit";
-import { BlockView } from "@/components/kits";
+import { BlockView } from "@/components/block-view";
 import { Editor } from "@/components/editor";
 import supplyMark from "@/components/supply-mark.svg";
 
@@ -358,7 +358,12 @@ export function Site() {
                           className="card"
                           id={`block-${block.id}`}
                           style={{ ["--h" as string]: `${block.h}px` }}
-                          onClick={() => setEditing(block.id)}
+                          onClick={(event) => {
+                            // Clicks on a live control interact with it; clicks elsewhere open the editor.
+                            const target = event.target as HTMLElement;
+                            if (target.closest(".ix, [contenteditable], [role=slider], [role=textbox]")) return;
+                            setEditing(block.id);
+                          }}
                         >
                           {block.badge ? <span className="badge">{block.badge}</span> : null}
                           <button

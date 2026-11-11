@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from "react";
+import type { CSSProperties, HTMLAttributes, ReactNode } from "react";
 
 const INK = "#17181A";
 const MUTE = "#6F6E68";
@@ -33,6 +33,7 @@ function Box({
   border,
   shadow,
   style,
+  ui,
   children,
 }: {
   layer: string;
@@ -51,6 +52,8 @@ function Box({
   border?: string;
   shadow?: boolean;
   style?: CSSProperties;
+  /** Extra DOM props (handlers, role, tabIndex, className) for interactive blocks. */
+  ui?: HTMLAttributes<HTMLDivElement>;
   children?: ReactNode;
 }) {
   const growRaw = style?.flex ?? style?.flexGrow;
@@ -61,7 +64,8 @@ function Box({
   const axH = heightToken != null && heightToken !== "100%" ? "fixed" : heightToken === "100%" ? "fill" : "hug";
   return (
     <div
-      className={root ? "kit" : undefined}
+      {...ui}
+      className={[root ? "kit" : "", ui?.className ?? ""].filter(Boolean).join(" ") || undefined}
       data-layer={layer}
       data-hug={hug}
       data-gap={String(gap)}
@@ -1485,7 +1489,7 @@ function Notice() {
 
 function Spin({ size = 18, color = INK }: { size?: number; color?: string }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 18 18" fill="none" aria-hidden="true">
+    <svg className="spin" width={size} height={size} viewBox="0 0 18 18" fill="none" aria-hidden="true">
       <circle cx="9" cy="9" r="7" stroke={color} strokeOpacity="0.2" strokeWidth="2" />
       <path d="M9 2a7 7 0 0 1 7 7" stroke={color} strokeWidth="2" strokeLinecap="round" />
     </svg>
@@ -2271,7 +2275,7 @@ function Footer() {
   );
 }
 
-const VIEWS: Record<string, () => ReactNode> = {
+export const VIEWS: Record<string, () => ReactNode> = {
   "primary-button": Primary,
   "button-set": ButtonSet,
   "icon-buttons": IconButtons,
@@ -2353,7 +2357,7 @@ const VIEWS: Record<string, () => ReactNode> = {
   footer: Footer,
 };
 
-export function BlockView({ id }: { id: string }) {
-  const View = VIEWS[id];
-  return View ? <View /> : null;
-}
+export {
+  AMBER, BLUE, Box, Btn, Caret, Card, Check, Chevron, CloseIcon, CORAL, Dot, Eye, Field, GREEN, Icon, INK, LINE,
+  Mic, MUTE, PAPER, SearchIcon, Spin, Star, TEAL, Txt, VIOLET, WASH, Arrow, Plus,
+};
