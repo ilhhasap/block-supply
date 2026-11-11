@@ -1489,7 +1489,7 @@ function Notice() {
 
 function Spin({ size = 18, color = INK }: { size?: number; color?: string }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 18 18" fill="none" aria-hidden="true">
+    <svg className="spin" width={size} height={size} viewBox="0 0 18 18" fill="none" aria-hidden="true">
       <circle cx="9" cy="9" r="7" stroke={color} strokeOpacity="0.2" strokeWidth="2" />
       <path d="M9 2a7 7 0 0 1 7 7" stroke={color} strokeWidth="2" strokeLinecap="round" />
     </svg>

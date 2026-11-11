@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import * as forms from "@/components/live-forms";
 import * as nav from "@/components/live-nav";
+import * as misc from "@/components/live-misc";
 
 /** Interactive replacements, keyed by block id. Missing ids fall back to the static block. */
 export const LIVE: Record<string, () => ReactNode> = {
@@ -41,4 +42,31 @@ export const LIVE: Record<string, () => ReactNode> = {
   accordion: nav.Accordion,
   faq: nav.Faq,
   notification: nav.Notification,
+  progress: misc.Progress,
+  rating: misc.Rating,
+  "status-pills": misc.StatusPills,
+  meter: misc.Meter,
+  stepper: misc.Stepper,
+  table: misc.Table,
+  "bar-chart": misc.BarChart,
+  donut: misc.Donut,
+  calendar: misc.Calendar,
+  timeline: misc.Timeline,
+  activity: misc.Activity,
+  "voice-button": misc.VoiceButton,
+  orb: misc.Orb,
+  waveform: misc.Waveform,
+  player: misc.Player,
+  scrub: misc.Scrub,
+  profile: misc.Profile,
+  pricing: misc.PricingCard,
+  product: misc.ProductCard,
+  "login-form": misc.LoginForm,
+  "signup-form": misc.SignupForm,
+  "contact-form": misc.ContactForm,
+  newsletter: misc.Newsletter,
+  hero: misc.Hero,
+  "feature-grid": misc.FeatureGrid,
+  "cta-banner": misc.CtaBanner,
+  footer: misc.Footer,
 };
