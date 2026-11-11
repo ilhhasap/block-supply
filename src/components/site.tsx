@@ -4,6 +4,7 @@ import { BLOCKS, CATEGORIES, type Block, type Category } from "@/data/blocks";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { UserButton } from "@/lib/auth/gates";
 import { releaseCopy, reserveCopy } from "@/lib/copy-gate";
+import { FREE_COPIES } from "@/lib/copy-limit";
 import { BlockView } from "@/components/kits";
 import { Editor } from "@/components/editor";
 import supplyMark from "@/components/supply-mark.svg";
@@ -77,7 +78,7 @@ export function Site() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const { user: currentUser, isPending: authPending } = useCurrentUserState();
   const [showTop, setShowTop] = useState(false);
-  const [saveGate, setSaveGate] = useState(false);
+  const [gate, setGate] = useState<"save" | "copy" | null>(null);
 
   useEffect(() => {
     const sync = () => setCols(columnsFor(window.innerWidth));
@@ -106,7 +107,7 @@ export function Site() {
       if (event.key === "Escape") {
         setMenu(false);
         setEditing(null);
-        setSaveGate(false);
+        setGate(null);
       }
     };
     window.addEventListener("keydown", onKey);
@@ -152,7 +153,7 @@ export function Site() {
   /** Saving needs an account; signed-out visitors get the log-in prompt instead. */
   function requestSave(id: string) {
     if (!currentUser) {
-      if (!authPending) setSaveGate(true);
+      if (!authPending) setGate("save");
       return;
     }
     toggleSave(id);
@@ -179,9 +180,7 @@ export function Site() {
     }
     if (!gate.ok) {
       setBusy(null);
-      window.sessionStorage.setItem("supply-copy-gate", "1");
-      setToast("Log in");
-      void navigate({ to: "/login" });
+      setGate("copy");
       return;
     }
     const ok = await copyBlock(block, kit);
@@ -436,7 +435,21 @@ export function Site() {
         </svg>
       </button>
 
-      {saveGate ? <SaveGate onClose={() => setSaveGate(false)} onLogin={() => void navigate({ to: "/login" })} /> : null}
+      {gate ? (
+        <LoginGate
+          title={gate === "copy" ? `You’ve used your ${FREE_COPIES} free copies` : "Log in to save blocks"}
+          body={
+            gate === "copy"
+              ? "Log in to keep copying blocks into Figma. It stays free."
+              : "Bookmark the blocks you like and find them again anytime. It stays free."
+          }
+          onClose={() => setGate(null)}
+          onLogin={() => {
+            if (gate === "copy") window.sessionStorage.setItem("supply-copy-gate", "1");
+            void navigate({ to: "/login" });
+          }}
+        />
+      ) : null}
 
       <div className="toast" data-on={toast ? "true" : "false"} role="status" aria-live="polite">
         <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
@@ -458,7 +471,7 @@ export function Site() {
   );
 }
 
-function SaveGate({ onClose, onLogin }: { onClose: () => void; onLogin: () => void }) {
+function LoginGate({ title, body, onClose, onLogin }: { title: string; body: string; onClose: () => void; onLogin: () => void }) {
   return (
     <div
       className="gate"
@@ -470,8 +483,8 @@ function SaveGate({ onClose, onLogin }: { onClose: () => void; onLogin: () => vo
       }}
     >
       <div className="gate-body">
-        <h2 id="gate-title">Log in to save blocks</h2>
-        <p>Bookmark the blocks you like and find them again anytime. It stays free.</p>
+        <h2 id="gate-title">{title}</h2>
+        <p>{body}</p>
         <button type="button" className="gate-cta" onClick={onLogin} autoFocus>
           <span>Log in</span>
           <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none">
