@@ -248,12 +248,6 @@ export function Site() {
           )}
         </label>
         <div className="tools">
-          <span className="mark" title="Auto layout, Geist, ready for Figma" aria-hidden="true">
-            <svg width="16" height="16" viewBox="0 0 16 16">
-              <rect x="5.2" y="1.6" width="8" height="8" rx="1.6" fill="none" stroke="#fff" strokeWidth="1.4" />
-              <rect x="2.2" y="5.2" width="8" height="8" rx="1.6" fill="#17181A" stroke="#fff" strokeWidth="1.4" />
-            </svg>
-          </span>
           <AuthSlot />
           <button type="button" className="join" onClick={() => setMenu((open) => !open)} aria-expanded={menu}>
             <span>Use for free</span>
