@@ -1076,3 +1076,13 @@
   cursor: wait;
   opacity: 0.6;
 }
+
+/* Masonry: columns keep their cards at natural height and end where they end, instead of the
+   last card stretching to even out the bottom edge. */
+.wall {
+  align-items: flex-start;
+}
+
+.col > :last-child {
+  flex-grow: 0;
+}
