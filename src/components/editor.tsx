@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { groupOf, type Block } from "@/data/blocks";
 import { BlockView } from "@/components/block-view";
+import { kitIn } from "@/components/shadow-host";
 
 type Tune = {
   fill: "light" | "dark";
@@ -197,8 +198,19 @@ export function Editor({
   const closing = useRef(false);
   const [limits, setLimits] = useState<Limits>({ corner: 48, gapMin: -24, gapMax: 40, shadow: 64 });
 
+  // The block is drawn in a shadow root made after the first render; run the setup again when it appears.
+  const [kitReady, setKitReady] = useState(false);
   useLayoutEffect(() => {
-    const kit = frameRef.current?.querySelector(".kit");
+    const frame = frameRef.current;
+    if (!frame) return;
+    const onReady = () => setKitReady(true);
+    frame.addEventListener("block-ready", onReady);
+    if (kitIn(frame)) setKitReady(true);
+    return () => frame.removeEventListener("block-ready", onReady);
+  }, []);
+
+  useLayoutEffect(() => {
+    const kit = kitIn(frameRef.current);
     if (!(kit instanceof HTMLElement)) return;
     if (!snapRef.current || !baseRef.current) {
       snapRef.current = takeSnap(kit);
@@ -211,7 +223,7 @@ export function Editor({
     }
     restore(snapRef.current);
     applyTune(kit, edit ?? baseRef.current, baseRef.current);
-  }, [edit]);
+  }, [edit, kitReady]);
 
   const tune = edit;
 
@@ -398,7 +410,7 @@ export function Editor({
             type="button"
             className="bench-copy"
             onClick={() => {
-              const kit = frameRef.current?.querySelector(".kit");
+              const kit = kitIn(frameRef.current);
               onCopy(kit instanceof HTMLElement ? kit : null);
             }}
           >

@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { LIVE } from "@/components/live";
 import { VIEWS } from "@/components/kits";
 import { BLOCKS } from "@/data/blocks";
+import { kitIn, ShadowHost } from "@/components/shadow-host";
 
 /**
  * Fits a block into its card. A block wider than the room it has (or narrower than the width it is
@@ -12,13 +13,15 @@ function Fit({ minW, noShadow, children }: { minW?: number; noShadow?: boolean; 
   const outer = useRef<HTMLDivElement>(null);
   const inner = useRef<HTMLDivElement>(null);
   const [fit, setFit] = useState({ scale: 1, width: 0, height: 0 });
+  // The block lives in a shadow root created after the first render; measure again once it is there.
+  const [ready, setReady] = useState(false);
 
   useLayoutEffect(() => {
     const outerEl = outer.current;
     const innerEl = inner.current;
     if (!outerEl || !innerEl) return;
     const measure = () => {
-      const kit = innerEl.firstElementChild as HTMLElement | null;
+      const kit = kitIn(innerEl);
       const avail = outerEl.clientWidth;
       // `offsetWidth` ignores the transform, so this is the block's real width.
       const natural = Math.max(minW ?? 0, kit?.offsetWidth ?? 0);
@@ -31,14 +34,14 @@ function Fit({ minW, noShadow, children }: { minW?: number; noShadow?: boolean; 
     const observer = new ResizeObserver(measure);
     observer.observe(outerEl);
     observer.observe(innerEl);
-    const kit = innerEl.firstElementChild;
+    const kit = kitIn(innerEl);
     if (kit) observer.observe(kit);
     return () => observer.disconnect();
-  }, [minW]);
+  }, [minW, ready]);
 
   const scaled = fit.scale < 1;
   return (
-    <div ref={outer} data-fit="" data-noshadow={noShadow ? "" : undefined} style={{ width: "100%", height: scaled ? fit.height : undefined }}>
+    <div ref={outer} data-fit="" style={{ width: "100%", height: scaled ? fit.height : undefined }}>
       <div
         ref={inner}
         data-fit-inner=""
@@ -50,7 +53,9 @@ function Fit({ minW, noShadow, children }: { minW?: number; noShadow?: boolean; 
           transformOrigin: "top left",
         }}
       >
-        {children}
+        <ShadowHost noShadow={noShadow} onReady={() => setReady(true)}>
+          {children}
+        </ShadowHost>
       </div>
     </div>
   );
