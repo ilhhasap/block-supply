@@ -399,14 +399,14 @@ export function Site() {
                 <h1 className="hero-head">Editable UI Components</h1>
                 <p className="hero-sub">
                   A library of <b>editable UI blocks</b>. Copy one and paste it into Figma as{" "}
-                  <b>auto layout</b>, set in <b>Geist</b>.
+                  <b>auto layout</b>, play with <b>Geist</b>.
                 </p>
                 <button
                   type="button"
                   className="hero-join"
                   onClick={() => document.getElementById("library")?.scrollIntoView({ behavior: "smooth" })}
                 >
-                  Copy any block
+                  Explore blocks
                 </button>
               </header>
 
@@ -552,7 +552,7 @@ export function Site() {
 
       {gate ? (
         <LoginGate
-          title={gate === "copy" ? `You’ve used your ${FREE_COPIES} free copies` : "Log in to save blocks"}
+          title={gate === "copy" ? `You’ve used your\n${FREE_COPIES} free copies` : "Log in to save blocks"}
           body={
             gate === "copy"
               ? "Log in to keep copying blocks into Figma. It stays free."
