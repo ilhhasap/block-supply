@@ -5,13 +5,22 @@ import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { authEnabled, signOut } from "@/lib/auth/client";
 import { releaseCopy, reserveCopy } from "@/lib/copy-gate";
 import { FREE_COPIES } from "@/lib/copy-limit";
+import { listSavedBlocks, mergeSavedBlocks, setSavedBlock } from "@/lib/saved";
 import { BlockView } from "@/components/block-view";
 import { Editor } from "@/components/editor";
 import supplyMark from "@/components/supply-mark.svg";
 
 type View = "library" | "free";
 
-const PLAIN_TOASTS = ["Couldn’t copy", "Link copied", "Log in", "Saved", "Welcome back"];
+const LOCAL_SAVED = "block-supply-saved";
+const TOAST_TEXT: Record<string, string> = {
+  "Couldn’t copy": "Couldn’t copy",
+  "Link copied": "Link copied",
+  "Log in": "Log in to keep copying",
+  Saved: "Saved to your list",
+  "Welcome back": "You’re in. Copy it again",
+  "Couldn’t save": "Couldn’t save, try again",
+};
 const PENDING_SAVE = "supply-pending-save";
 const PENDING_COPY = "supply-pending-copy";
 
@@ -90,38 +99,55 @@ export function Site() {
     return () => window.removeEventListener("resize", sync);
   }, []);
 
+  // Saved blocks live on the account. When a visitor is signed in, pull their list, folding in
+  // anything saved in this browser before (or the block they tried to save when asked to log in).
+  const userId = currentUser?.id ?? null;
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem("block-supply-saved");
-      if (raw) setSaved(JSON.parse(raw) as string[]);
-    } catch {
-      /* ignore */
+    if (authPending) return;
+    if (!userId) {
+      setSaved([]);
+      setOnlySaved(false);
+      return;
     }
-  }, []);
-
-  // Pick up what the visitor was doing before they were sent to log in.
-  useEffect(() => {
-    if (authPending || !currentUser) return;
-    try {
-      const pendingSave = window.sessionStorage.getItem(PENDING_SAVE);
-      const copyRetry = window.sessionStorage.getItem(PENDING_COPY);
-      window.sessionStorage.removeItem(PENDING_SAVE);
-      window.sessionStorage.removeItem(PENDING_COPY);
-      if (pendingSave && BLOCKS.some((block) => block.id === pendingSave)) {
-        setSaved((prev) => {
-          if (prev.includes(pendingSave)) return prev;
-          const next = [...prev, pendingSave];
-          localStorage.setItem("block-supply-saved", JSON.stringify(next));
-          return next;
-        });
-        setToast("Saved");
-      } else if (copyRetry) {
-        setToast("Welcome back");
+    let cancelled = false;
+    void (async () => {
+      let local: string[] = [];
+      let pendingSave: string | null = null;
+      let copyRetry = false;
+      try {
+        const raw = localStorage.getItem(LOCAL_SAVED);
+        const parsed: unknown = raw ? JSON.parse(raw) : [];
+        if (Array.isArray(parsed)) local = parsed.filter((id): id is string => typeof id === "string");
+        pendingSave = window.sessionStorage.getItem(PENDING_SAVE);
+        copyRetry = window.sessionStorage.getItem(PENDING_COPY) === "1";
+      } catch {
+        /* storage unavailable */
       }
-    } catch {
-      /* storage unavailable */
-    }
-  }, [authPending, currentUser]);
+      const known = new Set(BLOCKS.map((block) => block.id));
+      const ids = [...local, ...(pendingSave ? [pendingSave] : [])].filter((id) => known.has(id));
+      try {
+        const list = ids.length ? await mergeSavedBlocks({ data: { ids } }) : await listSavedBlocks();
+        if (cancelled) return;
+        setSaved(list);
+        try {
+          localStorage.removeItem(LOCAL_SAVED);
+          window.sessionStorage.removeItem(PENDING_SAVE);
+          window.sessionStorage.removeItem(PENDING_COPY);
+        } catch {
+          /* storage unavailable */
+        }
+        if (pendingSave && list.includes(pendingSave)) setToast("Saved");
+        else if (copyRetry) setToast("Welcome back");
+      } catch {
+        if (cancelled) return;
+        setSaved(local);
+        setToast("Couldn’t save");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [authPending, userId]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -191,11 +217,14 @@ export function Site() {
   }
 
   function toggleSave(id: string) {
-    setSaved((prev) => {
-      const next = prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id];
-      localStorage.setItem("block-supply-saved", JSON.stringify(next));
-      return next;
-    });
+    const on = !saved.includes(id);
+    setSaved((prev) => (on ? [...prev, id] : prev.filter((item) => item !== id)));
+    setSavedBlock({ data: { id, on } })
+      .then((list) => setSaved(list))
+      .catch(() => {
+        setSaved((prev) => (on ? prev.filter((item) => item !== id) : [...prev, id]));
+        setToast("Couldn’t save");
+      });
   }
 
   async function onCopy(block: Block, kit: HTMLElement | null) {
@@ -485,19 +514,9 @@ export function Site() {
           <circle cx="8" cy="8" r="7" fill="#17181A" />
           <path d="M5 8.2 7.1 10.2 11 6" fill="none" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" />
         </svg>
-        {toast === "Saved"
-          ? "Saved to your list"
-          : toast === "Welcome back"
-            ? "You’re in. Copy it again"
-            : toast === "Couldn’t copy"
-          ? "Couldn’t copy"
-          : toast === "Log in"
-            ? "Log in to keep copying"
-            : toast === "Link copied"
-              ? "Link copied"
-              : "Ready for Figma"}
+        {(toast && TOAST_TEXT[toast]) || "Ready for Figma"}
         <em>
-          {toast && !PLAIN_TOASTS.includes(toast) ? `· ${toast}` : ""}
+          {toast && !TOAST_TEXT[toast] ? `· ${toast}` : ""}
         </em>
       </div>
     </div>
