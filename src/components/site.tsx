@@ -100,6 +100,7 @@ export function Site() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const { user: currentUser, isPending: authPending } = useCurrentUserState();
   const [showTop, setShowTop] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const [gate, setGate] = useState<"save" | "copy" | null>(null);
 
   useEffect(() => {
@@ -293,7 +294,7 @@ export function Site() {
 
   return (
     <div className="app">
-      <header className="top">
+      <header className="top" data-scrolled={scrolled ? "true" : "false"}>
         <div className="lead">
           <button className="logo" type="button" aria-label="Block Supply home" onClick={() => goLibrary(null)}>
             <Logo />
@@ -368,7 +369,11 @@ export function Site() {
       <div
         className="scroll"
         ref={scrollRef}
-        onScroll={(event) => setShowTop(event.currentTarget.scrollTop > 520)}
+        onScroll={(event) => {
+          const top = event.currentTarget.scrollTop;
+          setShowTop(top > 520);
+          setScrolled(top > 6);
+        }}
       >
         <div className="body">
           {view === "free" ? (

@@ -1783,3 +1783,30 @@
     padding: 56px 28px;
   }
 }
+
+/* Once the page scrolls, a soft fade with a progressive blur sits behind the navbar so content
+   slides under it without colliding with the controls. */
+.top::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -14px -16px -34px;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(to bottom, rgba(244, 246, 249, 0.78), rgba(244, 246, 249, 0));
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  -webkit-mask-image: linear-gradient(to bottom, #000 40%, transparent);
+  mask-image: linear-gradient(to bottom, #000 40%, transparent);
+  transition: opacity 0.25s ease;
+}
+
+.top[data-scrolled="true"]::before {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .top::before {
+    transition: none;
+  }
+}
