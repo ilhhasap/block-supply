@@ -1,31 +1,35 @@
 /**
- * The upstream identity providers this app offers for sign-in (via the broker).
+ * Social sign-in providers offered on the login page.
  *
- * Source of truth for BOTH the server (`server.ts`, one `genericOAuth` provider
- * per entry) and the client (`client.ts` / sign-in buttons). Kept in its own
- * dependency-free module so the client can import it without pulling the
- * server-only Better Auth instance (and `pg`) into the browser bundle.
+ * Client-safe (no server imports). Email + password is always available; social
+ * buttons appear only for providers listed in `VITE_AUTH_PROVIDERS`
+ * (comma-separated, e.g. `google,github`). The server enables a provider only
+ * when its credentials are also set (`GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`,
+ * `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET`) — see `server.ts`.
  *
- * Each app federates to the shared **auth broker** (`GROK_AUTH_ISSUER`), which
- * holds the real Google/X secrets. The app never sees them — it only knows its
- * own per-app client id/secret and which upstream to ask the broker for (`idp`).
- *
- * To add an upstream (e.g. GitHub) once the broker supports it: add one entry
- * here (`{ providerId: "grok-github", idp: "github", label: "GitHub" }`). The
- * `providerId` is this app's local id and the OAuth callback path segment
- * (`/api/auth/oauth2/callback/<providerId>`); `idp` is the hint the broker reads
- * to pick the upstream (Better Auth's id for X is still `twitter`).
+ * To add another Better Auth social provider: add it to `KNOWN` here and to
+ * `socialProviders` in `server.ts`.
  */
-export type GrokProvider = {
-  /** This app's local provider id; also the callback path segment. */
-  providerId: string;
-  /** Upstream hint the broker forwards to (Better Auth social id). */
-  idp: string;
+export type SocialProviderId = "google" | "github";
+
+export type AuthProvider = {
+  /** Better Auth social provider id; also the OAuth callback path segment. */
+  id: SocialProviderId;
   /** Human label for the sign-in button. */
   label: string;
 };
 
-export const GROK_PROVIDERS: readonly GrokProvider[] = [
-  { providerId: "grok-google", idp: "google", label: "Google" },
-  { providerId: "grok-x", idp: "twitter", label: "X" },
-];
+const KNOWN: Record<SocialProviderId, AuthProvider> = {
+  google: { id: "google", label: "Google" },
+  github: { id: "github", label: "GitHub" },
+};
+
+const raw: string =
+  (import.meta as ImportMeta & { env?: Record<string, string | undefined> }).env
+    ?.VITE_AUTH_PROVIDERS ?? "";
+
+export const AUTH_PROVIDERS: readonly AuthProvider[] = raw
+  .split(",")
+  .map((s) => s.trim().toLowerCase())
+  .filter((s): s is SocialProviderId => s in KNOWN)
+  .map((s) => KNOWN[s]);

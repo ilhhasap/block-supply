@@ -3,16 +3,12 @@ import type { CopyGateResult } from "@/lib/copy-gate.server";
 
 function gated(kind: "reserve" | "release") {
   return createMiddleware({ type: "function" })
-    .client(async ({ next }) => {
-      const { getBearerToken } = await import("@/lib/auth/client");
-      return next({ sendContext: { bearerToken: getBearerToken() ?? undefined } });
-    })
-    .server(async ({ next, context }) => {
+    .server(async ({ next }) => {
       const gate = await import("@/lib/copy-gate.server");
       const result =
         kind === "reserve"
-          ? await gate.reserveAnonymousCopy(context.bearerToken)
-          : await gate.releaseAnonymousCopy(context.bearerToken);
+          ? await gate.reserveAnonymousCopy()
+          : await gate.releaseAnonymousCopy();
       return next({ context: { result } });
     });
 }

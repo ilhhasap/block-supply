@@ -42,7 +42,7 @@ const DEV_STATE: CurrentUserState = { user: DEV_USER, isPending: false };
  *                            the session resolves (`isPending: true`) and when
  *                            signed out (`isPending: false`). Session comes from
  *                            Better Auth `useSession()` → `/api/auth/get-session`
- *                            (cookie when deployed; bearer in live preview).
+ *                            (same-origin cookie).
  *   - Auth disabled (`VITE_AUTH_ENABLED=false`) -> `DEV_USER`, never pending.
  *
  * Protect a route by waiting out `isPending` before acting on `user` —

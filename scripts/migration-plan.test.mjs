@@ -11,7 +11,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
 import { isMigrationFile, migrationName, pendingMigrations } from "./migration-plan.mjs";
-import { projectRoot } from "./with-app-env.mjs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const projectRoot = () => resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
 const AUTH_MIGRATION = "0001_auth.sql";
 
