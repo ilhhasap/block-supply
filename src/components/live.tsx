@@ -2,9 +2,25 @@ import type { ReactNode } from "react";
 import * as forms from "@/components/live-forms";
 import * as nav from "@/components/live-nav";
 import * as misc from "@/components/live-misc";
+import * as extra from "@/components/live-extra";
 
 /** Interactive replacements, keyed by block id. Missing ids fall back to the static block. */
 export const LIVE: Record<string, () => ReactNode> = {
+  "card-stack": extra.CardStack,
+  reactions: extra.Reactions,
+  "tilt-card": extra.TiltCard,
+  "image-compare": extra.ImageCompare,
+  "expanding-panels": extra.ExpandingPanels,
+  "signature-pad": extra.SignaturePad,
+  "slide-confirm": extra.SlideConfirm,
+  "label-input": extra.LabelInput,
+  "rolling-counter": extra.RollingCounter,
+  "heat-map": extra.HeatMap,
+  "stacked-bars": extra.StackedBars,
+  "toast-stack": extra.ToastStack,
+  "dynamic-island": extra.DynamicIsland,
+  dock: extra.Dock,
+  "like-button": extra.LikeButton,
   "primary-button": forms.Primary,
   "button-set": forms.ButtonSet,
   "icon-buttons": forms.IconButtons,
