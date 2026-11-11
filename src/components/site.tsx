@@ -394,7 +394,7 @@ export function Site() {
               <header className="hero">
                 <div className="hero-dots" aria-hidden="true" />
                 <span className="hero-pill">
-                  {currentUser ? "Unlimited copies, free" : `Only ${FREE_COPIES} blocks without an account`}
+                  {currentUser ? "Unlimited copies, free" : `First ${FREE_COPIES} blocks free, no account`}
                 </span>
                 <h1 className="hero-head">Editable UI Components</h1>
                 <p className="hero-sub">
