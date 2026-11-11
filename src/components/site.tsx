@@ -190,6 +190,11 @@ export function Site() {
   }, [query, group, cat, onlySaved, saved]);
 
   // Sections are wide layouts, so they get at most two columns; a search mixes groups and keeps the usual grid.
+  // Nothing left to show in Saved (the last one was unsaved): go back to browsing everything.
+  useEffect(() => {
+    if (onlySaved && saved.length === 0) setOnlySaved(false);
+  }, [onlySaved, saved.length]);
+
   const wallCols = group === "Sections" && !query.trim() ? Math.min(cols, 2) : cols;
   const packed = useMemo(() => pack(filtered, wallCols), [filtered, wallCols]);
 
@@ -387,7 +392,11 @@ export function Site() {
                     type="button"
                     className="chip"
                     data-on={cat === name ? "true" : "false"}
-                    onClick={() => setCat((curr) => (curr === name ? null : name))}
+                    onClick={() => {
+                      // Saved and a category are separate filters; picking a category leaves Saved.
+                      setOnlySaved(false);
+                      setCat((curr) => (curr === name ? null : name));
+                    }}
                   >
                     {name}
                   </button>
@@ -397,7 +406,10 @@ export function Site() {
                     type="button"
                     className="chip"
                     data-on={onlySaved ? "true" : "false"}
-                    onClick={() => setOnlySaved((on) => !on)}
+                    onClick={() => {
+                      setCat(null);
+                      setOnlySaved((on) => !on);
+                    }}
                   >
                     Saved ({saved.length})
                   </button>
