@@ -126,7 +126,7 @@
   padding: 20px;
   overflow: auto;
   border-radius: 28px;
-  background: #ececee;
+  background: #f1f1f1;
 }
 
 .bench-panel :is(h2, p, span, b, button) {
@@ -740,4 +740,117 @@
   box-shadow: none;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
+}
+
+/* Back to top */
+.to-top {
+  position: fixed;
+  z-index: 60;
+  right: 22px;
+  bottom: 22px;
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border: 0;
+  border-radius: 26px;
+  background: #17181a;
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(23, 24, 26, 0.22);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(10px);
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease,
+    filter 0.16s ease;
+}
+.to-top[data-on="true"] {
+  opacity: 1;
+  pointer-events: auto;
+  transform: none;
+}
+.to-top:hover {
+  filter: brightness(1.2);
+}
+.to-top:active {
+  transform: scale(0.94);
+}
+
+/* Log-in prompt for saving */
+.gate {
+  position: fixed;
+  z-index: 130;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(252, 252, 252, 0.62);
+  -webkit-backdrop-filter: blur(28px) saturate(1.4);
+  backdrop-filter: blur(28px) saturate(1.4);
+  animation: gate-in 0.24s ease-out both;
+}
+@keyframes gate-in {
+  from {
+    opacity: 0;
+  }
+}
+.gate-body {
+  display: flex;
+  max-width: 620px;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  animation: gate-rise 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes gate-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+.gate h2 {
+  margin: 0;
+  color: var(--color-ink);
+  font-size: clamp(34px, 5vw, 56px);
+  font-weight: 500;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+}
+.gate p {
+  max-width: 440px;
+  margin: 18px 0 0;
+  color: #77767a;
+  font-size: 18px;
+  line-height: 1.45;
+}
+.gate-cta {
+  display: inline-flex;
+  height: 52px;
+  align-items: center;
+  gap: 14px;
+  margin-top: 32px;
+  padding: 0 26px 0 28px;
+  border: 0;
+  border-radius: 26px;
+  background: #17181a;
+  color: #fff;
+  font: 500 17px/1 var(--font-sans);
+  transition:
+    transform 0.12s ease,
+    filter 0.16s ease;
+}
+.gate-cta:hover {
+  filter: brightness(1.2);
+}
+.gate-cta:active {
+  transform: scale(0.97);
+}
+@media (prefers-reduced-motion: reduce) {
+  .gate,
+  .gate-body,
+  .to-top {
+    animation: none;
+    transition: none;
+  }
 }
