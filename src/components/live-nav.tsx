@@ -483,17 +483,58 @@ export function Accordion() {
   );
 }
 
+const FAQ_ITEMS: [string, string][] = [
+  ["Is it really free?", "Yes. Every block is free to copy. After your first three copies, log in; the account is free too."],
+  ["How do I paste into Figma?", "Copy a block, then paste it into a Figma file. It arrives as auto layout with live text."],
+  ["Can I edit a block first?", "Yes. Open a block to change its fill, corners, spacing, shadow and opacity before you copy."],
+  ["Which font does it use?", "Geist. Figma keeps it as live text, so you can swap in any typeface."],
+  ["Can I save blocks for later?", "Yes. Save a block to your account and find it again on any device."],
+];
+
+/** A plain FAQ section: a heading, then one-at-a-time rows separated by hairlines. */
 export function Faq() {
+  const [open, setOpen] = useState<number | null>(0);
   return (
-    <AccordionList
-      layer="FAQ"
-      initial={null}
-      items={[
-        ["How does billing work?", "There is nothing to bill. Every block is free."],
-        ["Can I cancel anytime?", "Yes. There is no plan to cancel."],
-        ["Do you offer refunds?", "Nothing is charged, so there is nothing to refund."],
-      ]}
-    />
+    <Box layer="FAQ" root fill dir="col" gap={28}>
+      <Box layer="Heading" dir="col" gap={6}>
+        <Txt size={24} weight={600}>
+          Frequently asked questions
+        </Txt>
+        <Txt size={14} weight={400} color={MUTE}>
+          Quick answers about using the blocks.
+        </Txt>
+      </Box>
+      <Box layer="Items" dir="col" fill gap={0}>
+        <Box layer="Rule" fill h={1} bg={LINE} />
+        {FAQ_ITEMS.map(([q, a], i) => (
+          <Box key={q} layer={q} dir="col" fill>
+            <Box layer="Item" dir="col" fill gap={8} pad="18px 0">
+              <Box
+                layer="Question row"
+                dir="row"
+                fill
+                align="center"
+                justify="space-between"
+                ui={{ ...act(() => setOpen(open === i ? null : i), q), "aria-expanded": open === i }}
+              >
+                <Txt size={15} weight={500}>
+                  {q}
+                </Txt>
+                <Txt size={20} weight={400} color={MUTE}>
+                  {open === i ? "–" : "+"}
+                </Txt>
+              </Box>
+              {open === i ? (
+                <Txt size={14} weight={400} color={MUTE} wrap>
+                  {a}
+                </Txt>
+              ) : null}
+            </Box>
+            <Box layer="Rule" fill h={1} bg={LINE} />
+          </Box>
+        ))}
+      </Box>
+    </Box>
   );
 }
 
