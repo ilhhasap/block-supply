@@ -1,12 +1,16 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 
-/** `/` is the component library; `/sections` and `/pricing` are the other two pages. */
-const PAGES = ["sections", "pricing"];
+/** `/` is the component library; `/sections`, `/pricing` and `/mimic` are the other pages. */
+const PAGES = ["sections", "pricing", "mimic"];
 
 const TITLES: Record<string, { title: string; description: string }> = {
   sections: {
     title: "Sections — Block Supply",
     description: "Hero, features, call to action, FAQ and footer sections. Copy one and paste it into Figma as auto layout.",
+  },
+  mimic: {
+    title: "Mimic — Block Supply",
+    description: "Upload a screenshot of a component and get it back as an editable block you can paste into Figma. Coming soon.",
   },
   pricing: {
     title: "Pricing — Block Supply",
