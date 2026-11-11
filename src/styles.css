@@ -1077,6 +1077,89 @@
   opacity: 0.6;
 }
 
+.lead {
+  gap: 6px;
+}
+
+.groups {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 14px;
+}
+
+.group-tab {
+  height: 36px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-sub);
+  font: 500 14px/1 var(--font-sans);
+  transition: background 0.16s, color 0.16s;
+}
+
+.group-tab:hover {
+  background: rgba(255, 255, 255, 0.5);
+  color: var(--color-ink);
+}
+
+.group-tab[data-on="true"] {
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--color-ink);
+  box-shadow: inset 0 1px 0 #ffffffe6, 0 6px 16px #303c5410;
+}
+
+@media (max-width: 1100px) {
+  .find {
+    position: static;
+    flex: 1;
+    width: auto;
+    min-width: 0;
+    transform: none;
+  }
+
+  .find:focus-within {
+    width: auto;
+  }
+}
+
+@media (max-width: 760px) {
+  /* Small screens: logo, search and account on the first row, the group tabs on a row of their own. */
+  .top {
+    flex-wrap: wrap;
+    height: auto;
+    row-gap: 6px;
+    padding: 8px 8px 8px 12px;
+  }
+
+  .lead {
+    display: contents;
+  }
+
+  .logo {
+    order: 1;
+  }
+
+  .find {
+    order: 2;
+  }
+
+  .tools {
+    order: 3;
+  }
+
+  .groups {
+    order: 4;
+    flex: 0 0 100%;
+    margin-left: -4px;
+  }
+
+  .body {
+    padding-top: 128px;
+  }
+}
+
 /* Masonry: columns keep their cards at natural height and end where they end, instead of the
    last card stretching to even out the bottom edge. */
 .wall {

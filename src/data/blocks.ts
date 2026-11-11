@@ -8,7 +8,11 @@ export type Category =
   | "Data"
   | "Status"
   | "Form"
-  | "Section";
+  | "Hero"
+  | "Features"
+  | "CTA"
+  | "FAQ"
+  | "Footer";
 
 export type Block = {
   id: string;
@@ -18,18 +22,20 @@ export type Block = {
   badge?: "New";
 };
 
-export const CATEGORIES: Category[] = [
-  "Button",
-  "Input",
-  "Card",
-  "Voice",
-  "Overlay",
-  "Nav",
-  "Data",
-  "Status",
-  "Form",
-  "Section",
-];
+/** Top-level groups shown in the navbar. */
+export type Group = "Components" | "Sections";
+
+export const GROUPS: Group[] = ["Components", "Sections"];
+
+/** The categories (filter chips) that belong to each group. */
+export const GROUP_CATEGORIES: Record<Group, Category[]> = {
+  Components: ["Button", "Input", "Card", "Voice", "Overlay", "Nav", "Data", "Status", "Form"],
+  Sections: ["Hero", "Features", "CTA", "FAQ", "Footer"],
+};
+
+export function groupOf(cat: Category): Group {
+  return GROUP_CATEGORIES.Sections.includes(cat) ? "Sections" : "Components";
+}
 
 export const BLOCKS: Block[] = [
   { id: "primary-button", name: "Primary button", cat: "Button", h: 220, badge: "New" },
@@ -106,9 +112,9 @@ export const BLOCKS: Block[] = [
   { id: "signup-form", name: "Sign-up form", cat: "Form", h: 500 },
   { id: "contact-form", name: "Contact form", cat: "Form", h: 520 },
   { id: "newsletter", name: "Newsletter", cat: "Form", h: 300 },
-  { id: "hero", name: "Hero", cat: "Section", h: 380, badge: "New" },
-  { id: "feature-grid", name: "Feature grid", cat: "Section", h: 260 },
-  { id: "cta-banner", name: "CTA banner", cat: "Section", h: 240 },
-  { id: "faq", name: "FAQ", cat: "Section", h: 320 },
-  { id: "footer", name: "Footer", cat: "Section", h: 340 },
+  { id: "hero", name: "Hero", cat: "Hero", h: 380, badge: "New" },
+  { id: "feature-grid", name: "Feature grid", cat: "Features", h: 260 },
+  { id: "cta-banner", name: "CTA banner", cat: "CTA", h: 240 },
+  { id: "faq", name: "FAQ", cat: "FAQ", h: 320 },
+  { id: "footer", name: "Footer", cat: "Footer", h: 340 },
 ];

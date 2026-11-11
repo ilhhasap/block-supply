@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState } from "react";
-import type { Block } from "@/data/blocks";
+import { groupOf, type Block } from "@/data/blocks";
 import { BlockView } from "@/components/block-view";
 
 type Tune = {
@@ -24,9 +24,9 @@ type Snap = {
 };
 
 function blurb(block: Block) {
-  const kind = block.cat.toLowerCase();
+  const kind = `${block.cat.toLowerCase()} ${groupOf(block.cat) === "Sections" ? "section" : "block"}`;
   const article = "aeiou".includes(kind[0] ?? "") ? "An" : "A";
-  return [`${article} ${kind} block. Drag a bar to tune it,`, "then copy this version into Figma."];
+  return [`${article} ${kind}. Drag a bar to tune it,`, "then copy this version into Figma."];
 }
 
 function swapColors(value: string) {
