@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { BLOCKS, GROUPS, GROUP_CATEGORIES, groupOf, type Block, type Category, type Group } from "@/data/blocks";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { authEnabled, signOut } from "@/lib/auth/client";
@@ -9,8 +9,6 @@ import { listSavedBlocks, mergeSavedBlocks, setSavedBlock } from "@/lib/saved";
 import { BlockView } from "@/components/block-view";
 import { Editor } from "@/components/editor";
 import { Footer } from "@/components/footer";
-
-type View = "library" | "free";
 
 const LOCAL_SAVED = "block-supply-saved";
 const TOAST_TEXT: Record<string, string> = {
@@ -86,9 +84,11 @@ async function copyBlock(block: Block, kit: HTMLElement) {
 export function Site() {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
-  const [group, setGroup] = useState<Group>("Components");
+  // The page comes from the URL: `/` components, `/sections`, `/pricing`.
+  const { page: pageParam } = useParams({ strict: false }) as { page?: string };
+  const page: "components" | "sections" | "pricing" = pageParam === "sections" || pageParam === "pricing" ? pageParam : "components";
+  const group: Group = page === "sections" ? "Sections" : "Components";
   const [cat, setCat] = useState<Category | null>(null);
-  const [view, setView] = useState<View>("library");
   const [cols, setCols] = useState(3);
   const [saved, setSaved] = useState<string[]>([]);
   const [toast, setToast] = useState<string | null>(null);
@@ -213,18 +213,17 @@ export function Site() {
   const wallCols = group === "Sections" && !query.trim() ? Math.min(cols, 2) : cols;
   const packed = useMemo(() => pack(filtered, wallCols), [filtered, wallCols]);
 
-  function goLibrary(next?: Category | null) {
-    setView("library");
-    setCat(next ?? null);
-    if (next) setGroup(groupOf(next));
+  function goLibrary() {
+    setCat(null);
+    void navigate({ to: "/{-$page}", params: { page: undefined } });
     scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  function goFree() {
-    setView("free");
+  // A new page starts at the top with no category chosen.
+  useEffect(() => {
     setCat(null);
-    scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-  }
+    scrollRef.current?.scrollTo({ top: 0 });
+  }, [page]);
 
   /** Saving needs an account; signed-out visitors get the log-in prompt instead. */
   function requestSave(id: string) {
@@ -301,27 +300,34 @@ export function Site() {
     <div className="app">
       <header className="top" data-scrolled={scrolled ? "true" : "false"} data-hidden={navHidden ? "true" : "false"}>
         <div className="lead">
-          <button className="logo" type="button" aria-label="Block Supply home" onClick={() => goLibrary(null)}>
+          <Link
+            to="/{-$page}"
+            params={{ page: undefined }}
+            className="logo"
+            aria-label="Block Supply home"
+            onClick={() => {
+              setOnlySaved(false);
+              setQuery("");
+            }}
+          >
             <Logo />
-          </button>
+          </Link>
           <nav className="groups" aria-label="Browse by group">
             {GROUPS.map((name) => (
-              <button
+              <Link
                 key={name}
-                type="button"
+                to="/{-$page}"
+                params={{ page: name === "Sections" ? "sections" : undefined }}
                 className="group-tab"
-                data-on={view === "library" && group === name ? "true" : "false"}
-                aria-current={view === "library" && group === name ? "page" : undefined}
+                data-on={page !== "pricing" && group === name ? "true" : "false"}
+                aria-current={page !== "pricing" && group === name ? "page" : undefined}
                 onClick={() => {
-                  setGroup(name);
-                  setCat(null);
                   setOnlySaved(false);
                   setQuery("");
-                  goLibrary(null);
                 }}
               >
                 {name}
-              </button>
+              </Link>
             ))}
           </nav>
         </div>
@@ -338,7 +344,7 @@ export function Site() {
             onChange={(event) => {
               setQuery(event.target.value);
               if (event.target.value) setCat(null);
-              if (view !== "library") setView("library");
+              if (page === "pricing") void navigate({ to: "/{-$page}", params: { page: undefined } });
             }}
           />
           {query ? (
@@ -359,14 +365,14 @@ export function Site() {
             savedCount={saved.length}
             onSaved={() => {
               setOnlySaved(true);
-              setView("library");
+              if (page === "pricing") void navigate({ to: "/{-$page}", params: { page: undefined } });
               scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
             }}
           />
           {!currentUser && !authPending ? (
-            <button type="button" className="join" onClick={goFree}>
+            <Link to="/{-$page}" params={{ page: "pricing" }} className="join">
               <span>Use for free</span>
-            </button>
+            </Link>
           ) : null}
         </div>
       </header>
@@ -387,14 +393,14 @@ export function Site() {
         }}
       >
         <div className="body">
-          {view === "free" ? (
-            <FreePage onBrowse={() => goLibrary(null)} signedIn={Boolean(currentUser)} />
+          {page === "pricing" ? (
+            <FreePage onBrowse={goLibrary} signedIn={Boolean(currentUser)} />
           ) : (
             <>
               <header className="hero">
                 <div className="hero-dots" aria-hidden="true" />
                 <span className="hero-pill">
-                  {currentUser ? "Unlimited copies, free" : `${FREE_COPIES} free copies, then log in`}
+                  {currentUser ? "Unlimited copies, free" : `First ${FREE_COPIES} blocks free, no account`}
                 </span>
                 <h1 className="hero-head">Editable UI Components</h1>
                 <p className="hero-sub">

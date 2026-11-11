@@ -9,14 +9,14 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Block Supply — Free UI blocks for Figma" },
+      { title: "Block Supply — Free blocks for Figma" },
       {
         name: "description",
         content:
           "A library of UI blocks. Copy a component and paste it into Figma as auto layout, set in Geist. Three copies are free, then log in to keep copying.",
       },
       { name: "theme-color", content: "#ffffff" },
-      { property: "og:title", content: "Block Supply — Free UI blocks for Figma" },
+      { property: "og:title", content: "Block Supply — Free blocks for Figma" },
       { property: "og:description", content: "Free SVG UI blocks for Figma" },
       { property: "og:type", content: "website" },
       { property: "og:image", content: "/og.jpg" },

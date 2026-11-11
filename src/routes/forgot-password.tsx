@@ -5,7 +5,7 @@ import { authClient } from "@/lib/auth/client";
 
 export const Route = createFileRoute("/forgot-password")({
   component: ForgotPasswordPage,
-  head: () => ({ meta: [{ title: "Forgot password — Supply" }] }),
+  head: () => ({ meta: [{ title: "Forgot password — Block Supply" }] }),
 });
 
 function ForgotPasswordPage() {

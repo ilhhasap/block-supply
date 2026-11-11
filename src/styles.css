@@ -1891,3 +1891,23 @@
 .hero-join {
   animation-delay: 0.12s;
 }
+
+/* Navbar links (logo, group tabs, Use for free) are real anchors now. */
+a.group-tab,
+a.join,
+a.logo {
+  text-decoration: none;
+}
+
+a.group-tab {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Only the soft green glow at the bottom corner remains; the blue, orange and pink glows were removed
+   so nothing tints the area behind the navbar. */
+body {
+  background-image: radial-gradient(760px 520px at 96% 108%, rgba(186, 228, 212, 0.72), transparent 52%);
+}
+
+
