@@ -31,7 +31,7 @@ function LoginPage() {
   });
 
   if (isPending) return <main className="login-page" />;
-  if (user) return <Navigate to="/" />;
+  if (user) return <Navigate to="/{-$page}" params={{ page: undefined }} />;
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
@@ -70,7 +70,7 @@ function LoginPage() {
       setPassword("");
       return;
     }
-    await navigate({ to: "/" });
+    await navigate({ to: "/{-$page}", params: { page: undefined } });
   }
 
   async function resendVerification() {

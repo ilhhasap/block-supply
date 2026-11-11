@@ -1892,6 +1892,18 @@
   animation-delay: 0.12s;
 }
 
+/* Navbar links (logo, group tabs, Use for free) are real anchors now. */
+a.group-tab,
+a.join,
+a.logo {
+  text-decoration: none;
+}
+
+a.group-tab {
+  display: inline-flex;
+  align-items: center;
+}
+
 /* The blue and pink glow at the top of the page scrolls away with the content, so it no longer sits
    behind the navbar once you have scrolled. The two lower glows stay fixed. */
 body {
