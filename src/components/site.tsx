@@ -86,8 +86,18 @@ export function Site() {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   // The page comes from the URL: `/` components, `/sections`, `/pricing`.
-  const { page: pageParam } = useParams({ strict: false }) as { page?: string };
-  const page: "components" | "sections" | "pricing" = pageParam === "sections" || pageParam === "pricing" ? pageParam : "components";
+  // `/b/<id>` is the same library with that block's editor open on top.
+  const { page: pageParam, id: blockParam } = useParams({ strict: false }) as { page?: string; id?: string };
+  const editing = BLOCKS.some((block) => block.id === blockParam) ? (blockParam ?? null) : null;
+  const editingGroup = editing ? groupOf(BLOCKS.find((block) => block.id === editing)!.cat) : null;
+  const page: "components" | "sections" | "pricing" =
+    editingGroup === "Sections"
+      ? "sections"
+      : editingGroup
+        ? "components"
+        : pageParam === "sections" || pageParam === "pricing"
+          ? pageParam
+          : "components";
   const group: Group = page === "sections" ? "Sections" : "Components";
   const [cat, setCat] = useState<Category | null>(null);
   const [cols, setCols] = useState(3);
@@ -96,7 +106,6 @@ export function Site() {
   const [copied, setCopied] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [onlySaved, setOnlySaved] = useState(false);
-  const [editing, setEditing] = useState<string | null>(null);
   const findRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { user: currentUser, isPending: authPending } = useCurrentUserState();
@@ -289,7 +298,7 @@ export function Site() {
   const editingBlock = BLOCKS.find((block) => block.id === editing) ?? null;
 
   async function onShare(block: Block) {
-    const url = `${window.location.origin}${window.location.pathname}#block-${block.id}`;
+    const url = `${window.location.origin}/b/${block.id}`;
     try {
       await navigator.clipboard.writeText(url);
       setToast("Link copied");
@@ -477,7 +486,7 @@ export function Site() {
                             // Clicks on a live control interact with it; clicks elsewhere open the editor.
                             const target = event.target as HTMLElement;
                             if (target.closest(".ix, [contenteditable], [role=slider], [role=textbox]")) return;
-                            setEditing(block.id);
+                            void navigate({ to: "/b/$id", params: { id: block.id } });
                           }}
                         >
                           {block.badge ? <span className="badge">{block.badge}</span> : null}
@@ -538,7 +547,9 @@ export function Site() {
           saved={saved.includes(editingBlock.id)}
           busy={busy === editingBlock.id}
           copied={copied === editingBlock.id}
-          onClose={() => setEditing(null)}
+          onClose={() =>
+            void navigate({ to: "/{-$page}", params: { page: page === "sections" ? "sections" : undefined } })
+          }
           onSave={() => requestSave(editingBlock.id)}
           onCopy={(kit) => void onCopy(editingBlock, kit)}
           onShare={() => void onShare(editingBlock)}
