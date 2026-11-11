@@ -732,3 +732,12 @@
     padding: 56px 24px;
   }
 }
+
+/* Card name pill: solid white, no glass. */
+.cname {
+  background: #fff;
+  border: 1px solid #0000000f;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
