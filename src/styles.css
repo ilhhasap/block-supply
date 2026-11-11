@@ -741,3 +741,30 @@
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
+
+/* Interactive blocks. Hover/press feedback only touches filter and transform, which are
+   never active while the visitor is pressing "Copy". */
+.kit .ix {
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  transition:
+    transform 0.12s ease,
+    background-color 0.16s ease,
+    filter 0.16s ease,
+    border-color 0.16s ease,
+    opacity 0.16s ease;
+}
+.kit .ix:hover {
+  filter: brightness(0.96);
+}
+.kit .ix:active {
+  transform: scale(0.97);
+}
+.kit :is(.ix, [contenteditable], [role="slider"], [role="textbox"]):focus-visible {
+  outline: 2px solid #0a84ff;
+  outline-offset: 2px;
+}
+.kit [role="textbox"] {
+  cursor: text;
+}

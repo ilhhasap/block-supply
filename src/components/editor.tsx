@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import type { Block } from "@/data/blocks";
-import { BlockView } from "@/components/kits";
+import { BlockView } from "@/components/block-view";
 
 type Tune = {
   fill: "light" | "dark";
