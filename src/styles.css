@@ -1904,18 +1904,15 @@ a.group-tab {
   align-items: center;
 }
 
-/* The blue and pink glow at the top of the page scrolls away with the content, so it no longer sits
-   behind the navbar once you have scrolled. The two lower glows stay fixed. */
+/* The pink glow at the top of the page scrolls away with the content, so it no longer sits behind the
+   navbar once you have scrolled. The green glow at the bottom stays fixed. The blue and orange glows
+   were removed. */
 body {
-  background-image:
-    radial-gradient(760px 520px at 96% 108%, rgba(186, 228, 212, 0.72), transparent 52%),
-    radial-gradient(700px 480px at -8% 104%, rgba(255, 230, 200, 0.66), transparent 50%);
+  background-image: radial-gradient(760px 520px at 96% 108%, rgba(186, 228, 212, 0.72), transparent 52%);
 }
 
 .scroll {
-  background-image:
-    radial-gradient(980px 520px at 0% -60px, rgba(190, 216, 255, 0.95), transparent 58%),
-    radial-gradient(860px 500px at 100% -50px, rgba(255, 210, 198, 0.8), transparent 56%);
+  background-image: radial-gradient(860px 500px at 100% -50px, rgba(255, 210, 198, 0.8), transparent 56%);
   background-attachment: local;
   background-repeat: no-repeat;
 }
