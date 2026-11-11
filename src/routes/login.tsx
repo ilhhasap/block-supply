@@ -1,6 +1,7 @@
 import { createFileRoute, Link, Navigate, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { authClient, authEnabled, AUTH_PROVIDERS, signIn } from "@/lib/auth/client";
+import { FREE_COPIES } from "@/lib/copy-limit";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 
 export const Route = createFileRoute("/login")({
@@ -93,7 +94,7 @@ function LoginPage() {
             <span>Supply</span>
           </div>
           <h1 id="login-title">{mode === "signup" ? "Create your account" : "Log in or sign up"}</h1>
-          {gated ? <p className="login-note">3 free copies used. Log in to keep copying into Figma.</p> : null}
+          {gated ? <p className="login-note">{FREE_COPIES} free copies used. Log in to keep copying into Figma. It stays free.</p> : null}
 
           {authEnabled ? (
             <form onSubmit={onSubmit}>

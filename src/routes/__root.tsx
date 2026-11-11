@@ -11,7 +11,7 @@ export const Route = createRootRoute({
       {
         name: "description",
         content:
-          "A library of UI blocks. Copy a component and paste it into Figma as auto layout, set in Geist. Three copies are free, then log in.",
+          "A library of UI blocks. Copy a component and paste it into Figma as auto layout, set in Geist. Three copies are free, then log in to keep copying.",
       },
       { name: "theme-color", content: "#ffffff" },
       { property: "og:title", content: "Block Supply — Free UI blocks for Figma" },
