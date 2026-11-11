@@ -1911,3 +1911,47 @@ body {
 }
 
 
+
+/* Editor modal: it grows out of the card that was clicked and shrinks back into it. */
+.bench {
+  animation: none;
+  transition: opacity 0.3s ease;
+}
+
+.bench-sheet {
+  animation: none;
+  transform-origin: center;
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease;
+}
+
+.bench[data-phase="enter"],
+.bench[data-phase="exit"] {
+  opacity: 0;
+}
+
+.bench[data-phase="exit"] {
+  pointer-events: none;
+}
+
+.bench[data-phase="enter"] .bench-sheet,
+.bench[data-phase="exit"] .bench-sheet {
+  opacity: 0;
+  transform: translate(var(--ox, 0px), var(--oy, 0px)) scale(var(--os, 0.96));
+}
+
+.bench[data-phase="exit"] .bench-sheet {
+  transition-duration: 0.34s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bench,
+  .bench-sheet {
+    transition: none;
+  }
+}
+
+/* Getting into the card pose is instant; only leaving it (and returning to it) animates. */
+.bench[data-phase="enter"],
+.bench[data-phase="enter"] .bench-sheet {
+  transition: none;
+}

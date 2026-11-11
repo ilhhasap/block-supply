@@ -174,7 +174,6 @@ export function Site() {
         findRef.current?.select();
       }
       if (event.key === "Escape") {
-        setEditing(null);
         setGate(null);
       }
     };
