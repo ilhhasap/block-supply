@@ -1851,3 +1851,43 @@
     transition: none;
   }
 }
+
+/* Performance: a 28px backdrop blur on every card, pill and chip (200+ elements) made scrolling heavy
+   and is barely visible over the smooth page gradient, so the glass surfaces are translucent only.
+   The few things that sit over moving content keep a light blur. */
+:root {
+  --glass-blur: none;
+}
+
+.find,
+.toast,
+.acct-menu {
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  backdrop-filter: blur(14px) saturate(1.4);
+}
+
+/* Skip layout and paint for cards that are far off screen. */
+.card {
+  content-visibility: auto;
+  contain-intrinsic-block-size: auto var(--h, 300px);
+}
+
+/* Hero text appears sooner: it is the largest thing on first paint. */
+.hero-pill,
+.hero-head,
+.hero-sub,
+.hero-join {
+  animation-duration: 0.45s;
+}
+
+.hero-head {
+  animation-delay: 0.04s;
+}
+
+.hero-sub {
+  animation-delay: 0.08s;
+}
+
+.hero-join {
+  animation-delay: 0.12s;
+}
