@@ -3,7 +3,13 @@ import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 const PREFIX = "d1";
 
 export function copySecret() {
-  return process.env.BETTER_AUTH_SECRET || "supply-copy-gate-dev";
+  const secret = process.env.BETTER_AUTH_SECRET;
+  if (secret) return secret;
+  // A fixed fallback would let anyone forge a device cookie, so only allow it outside production.
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("BETTER_AUTH_SECRET is required in production");
+  }
+  return "supply-copy-gate-dev";
 }
 
 function mac(value: string, secret: string) {

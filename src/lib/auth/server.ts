@@ -52,7 +52,8 @@ function authSecret(): string {
   const configured = env("BETTER_AUTH_SECRET");
   if (configured) return configured;
   if (isProduction) {
-    console.error("[auth] BETTER_AUTH_SECRET is not set — sessions will not survive restarts.");
+    // A per-instance random secret breaks sessions on serverless and is not a safe default.
+    throw new Error("[auth] BETTER_AUTH_SECRET is required in production.");
   }
   globalAuthRef.__authDevSecret__ ??= randomBytes(32).toString("hex");
   return globalAuthRef.__authDevSecret__;

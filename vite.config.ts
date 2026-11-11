@@ -12,6 +12,31 @@ import { nitro } from "nitro/vite";
 import { figmaAutolayoutPlugin } from "./scripts/figma-autolayout-plugin.mjs";
 import { isMigrationFile } from "./scripts/migration-plan.mjs";
 
+/**
+ * Response headers for every route. The CSP keeps inline scripts and styles because TanStack Start
+ * emits inline hydration scripts and the blocks use inline styles; everything else is locked to
+ * this origin (Google avatars are the only external images).
+ */
+const securityHeaders = {
+  "Content-Security-Policy": [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline'",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob: https://*.googleusercontent.com",
+    "font-src 'self' data:",
+    "connect-src 'self'",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+  ].join("; "),
+  "Strict-Transport-Security": "max-age=63072000; includeSubDomains",
+  "X-Content-Type-Options": "nosniff",
+  "X-Frame-Options": "DENY",
+  "Referrer-Policy": "strict-origin-when-cross-origin",
+  "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=()",
+};
+
 /** The files `src/lib/db.ts` globs — same directory, same non-recursive scope. */
 function hasGlobbedMigrations(root: string): boolean {
   try {
@@ -76,7 +101,7 @@ export default defineConfig(({ command, isPreview }) => ({
     tanstackStart(),
     ...(command === "build" || isPreview
       ? [
-          nitro({ preset: "vercel" }),
+          nitro({ preset: "vercel", routeRules: { "/**": { headers: securityHeaders } } }),
         ]
       : []),
     viteReact(),
