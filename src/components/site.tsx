@@ -60,11 +60,17 @@ async function copyBlock(block: Block, kit: HTMLElement) {
     const fit = kit.closest<HTMLElement>("[data-fit-inner]");
     const scaleBefore = fit?.style.transform ?? "";
     if (fit) fit.style.transform = "none";
+    // The converter gives a frame with no fill an opaque white one, which shows up in Figma as a
+    // white box behind blocks that only have shadows. An almost-invisible fill keeps it clear.
+    const bgBefore = kit.style.backgroundColor;
+    const clearRoot = /^(transparent|rgba\(\s*0\s*,\s*0\s*,\s*0\s*,\s*0\s*\))$/.test(getComputedStyle(kit).backgroundColor);
+    if (clearRoot) kit.style.backgroundColor = "rgba(255, 255, 255, 0.004)";
     let inlined: string;
     try {
       inlined = inlineComputedStyles(kit);
     } finally {
       if (fit) fit.style.transform = scaleBefore;
+      if (clearRoot) kit.style.backgroundColor = bgBefore;
     }
     const clone = new DOMParser().parseFromString(inlined, "text/html").body.firstElementChild;
     if (!clone) throw new Error("empty frame");
