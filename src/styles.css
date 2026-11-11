@@ -1810,3 +1810,20 @@
     transition: none;
   }
 }
+
+/* Editor modal: let its grid tracks shrink below their content so the sheet never grows wider than
+   the screen (the 360px preview frame was pushing it past the edge on phones). */
+.bench {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.bench-canvas {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* Phones: 16px inputs keep iOS Safari from zooming the page when a field is focused. */
+@media (width <= 560px) {
+  .login-field input {
+    font-size: 16px;
+  }
+}
