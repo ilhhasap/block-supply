@@ -616,12 +616,12 @@ function Profile() {
       <Box layer="Identity" dir="row" fill align="center" gap={12}>
         <Box layer="Avatar" dir="row" w={56} h={56} radius={28} align="center" justify="center" bg={INK}>
           <Txt size={14} weight={600} color={PAPER}>
-            IT
+            AM
           </Txt>
         </Box>
         <Box layer="Name" dir="col" gap={2}>
           <Txt size={16} weight={600}>
-            Ilham Studio
+            Alex Morgan
           </Txt>
           <Txt size={13} weight={400} color={MUTE}>
             Product design
