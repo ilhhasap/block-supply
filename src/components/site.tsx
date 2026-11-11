@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { BLOCKS, CATEGORIES, type Block, type Category } from "@/data/blocks";
+import { BLOCKS, GROUPS, GROUP_CATEGORIES, groupOf, type Block, type Category, type Group } from "@/data/blocks";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { authEnabled, signOut } from "@/lib/auth/client";
 import { releaseCopy, reserveCopy } from "@/lib/copy-gate";
@@ -77,6 +77,7 @@ async function copyBlock(block: Block, kit: HTMLElement) {
 export function Site() {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
+  const [group, setGroup] = useState<Group>("Components");
   const [cat, setCat] = useState<Category | null>(null);
   const [view, setView] = useState<View>("library");
   const [cols, setCols] = useState(3);
@@ -175,6 +176,8 @@ export function Site() {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return BLOCKS.filter((block) => {
+      // A search looks through everything; otherwise only the chosen group.
+      if (!q && groupOf(block.cat) !== group) return false;
       if (cat && block.cat !== cat) return false;
       if (onlySaved && !saved.includes(block.id)) return false;
       if (!q) return true;
@@ -184,13 +187,14 @@ export function Site() {
         block.id.includes(q)
       );
     });
-  }, [query, cat, onlySaved, saved]);
+  }, [query, group, cat, onlySaved, saved]);
 
   const packed = useMemo(() => pack(filtered, cols), [filtered, cols]);
 
   function goLibrary(next?: Category | null) {
     setView("library");
     setCat(next ?? null);
+    if (next) setGroup(groupOf(next));
     scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -278,6 +282,26 @@ export function Site() {
           <button className="logo" type="button" aria-label="Block Supply home" onClick={() => goLibrary(null)}>
             <Logo />
           </button>
+          <nav className="groups" aria-label="Browse by group">
+            {GROUPS.map((name) => (
+              <button
+                key={name}
+                type="button"
+                className="group-tab"
+                data-on={view === "library" && group === name ? "true" : "false"}
+                aria-current={view === "library" && group === name ? "page" : undefined}
+                onClick={() => {
+                  setGroup(name);
+                  setCat(null);
+                  setOnlySaved(false);
+                  setQuery("");
+                  goLibrary(null);
+                }}
+              >
+                {name}
+              </button>
+            ))}
+          </nav>
         </div>
         <label className="find">
           <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
@@ -291,6 +315,7 @@ export function Site() {
             aria-label="Search blocks"
             onChange={(event) => {
               setQuery(event.target.value);
+              if (event.target.value) setCat(null);
               if (view !== "library") setView("library");
             }}
           />
@@ -354,7 +379,7 @@ export function Site() {
               </header>
 
               <div className="bar" role="toolbar" aria-label="Filter by kind">
-                {CATEGORIES.map((name) => (
+                {GROUP_CATEGORIES[group].map((name) => (
                   <button
                     key={name}
                     type="button"
