@@ -68,7 +68,6 @@ export function Site() {
   const [view, setView] = useState<View>("library");
   const [cols, setCols] = useState(3);
   const [saved, setSaved] = useState<string[]>([]);
-  const [menu, setMenu] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -105,7 +104,6 @@ export function Site() {
         findRef.current?.select();
       }
       if (event.key === "Escape") {
-        setMenu(false);
         setEditing(null);
         setGate(null);
       }
@@ -139,14 +137,12 @@ export function Site() {
   function goLibrary(next?: Category | null) {
     setView("library");
     setCat(next ?? null);
-    setMenu(false);
     scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function goFree() {
     setView("free");
     setCat(null);
-    setMenu(false);
     scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -249,38 +245,11 @@ export function Site() {
         </label>
         <div className="tools">
           <AuthSlot />
-          <button type="button" className="join" onClick={() => setMenu((open) => !open)} aria-expanded={menu}>
+          <button type="button" className="join" onClick={goFree}>
             <span>Use for free</span>
-            <i />
-            <b aria-hidden="true">▾</b>
           </button>
         </div>
       </header>
-
-      {menu ? (
-        <div className="popover" role="menu">
-          <p className="hint">
-            {FREE_COPIES} copies are free without an account. After that, log in (it stays free) and keep pasting
-            into Figma.
-          </p>
-          <button type="button" onClick={() => goLibrary(null)}>
-            Browse all {BLOCKS.length} blocks
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setOnlySaved((on) => !on);
-              setView("library");
-              setMenu(false);
-            }}
-          >
-            {onlySaved ? "Show everything" : `Saved (${saved.length})`}
-          </button>
-          <button type="button" onClick={goFree}>
-            Why it’s free
-          </button>
-        </div>
-      ) : null}
 
       <div
         className="scroll"
@@ -321,9 +290,14 @@ export function Site() {
                     {name}
                   </button>
                 ))}
-                {onlySaved ? (
-                  <button type="button" className="chip" data-on="true" onClick={() => setOnlySaved(false)}>
-                    Saved
+                {saved.length > 0 || onlySaved ? (
+                  <button
+                    type="button"
+                    className="chip"
+                    data-on={onlySaved ? "true" : "false"}
+                    onClick={() => setOnlySaved((on) => !on)}
+                  >
+                    Saved ({saved.length})
                   </button>
                 ) : null}
               </div>
