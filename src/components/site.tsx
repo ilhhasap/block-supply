@@ -94,6 +94,12 @@ async function copyBlock(block: Block, kit: HTMLElement) {
 export function Site() {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
+  // The shortcut hint reads ⌘ K on a Mac; detected after mount so the server and first render agree.
+  const [isMac, setIsMac] = useState(false);
+  useEffect(() => {
+    const platform = (navigator as Navigator & { userAgentData?: { platform?: string } }).userAgentData?.platform ?? navigator.platform;
+    setIsMac(/mac|iphone|ipad/i.test(platform));
+  }, []);
   // The page comes from the URL: `/` components, `/sections`, `/pricing`.
   // `/b/<id>` is the same library with that block's editor open on top.
   const { page: pageParam, id: blockParam } = useParams({ strict: false }) as { page?: string; id?: string };
@@ -402,7 +408,7 @@ export function Site() {
               Clear
             </button>
           ) : (
-            <span className="kbd">Ctrl K</span>
+            <span className="kbd">{isMac ? "⌘ K" : "Ctrl K"}</span>
           )}
         </label>
         <div className="tools">
