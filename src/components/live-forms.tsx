@@ -241,7 +241,7 @@ export function SearchField() {
   const [text, setText] = useState("");
   const [key, setKey] = useState(0);
   return (
-    <Box layer="Search field" root fill dir="row" align="center" gap={10} pad="0 16px" h={52} radius={999} bg={WASH}>
+    <Box layer="Search field" root fill dir="row" align="center" gap={10} pad="0 16px" h={52} radius={999} bg={PAPER} border={`1px solid ${LINE}`}>
       <SearchIcon />
       <Editable key={key} placeholder="Search components" size={15} weight={400} onText={setText} />
       {text ? (
@@ -249,7 +249,7 @@ export function SearchField() {
           <CloseIcon />
         </Box>
       ) : (
-        <Txt size={12} weight={500} color="#8A8984">
+        <Txt size={12} weight={500} color={MUTE}>
           Ctrl K
         </Txt>
       )}

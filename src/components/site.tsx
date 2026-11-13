@@ -24,6 +24,8 @@ const TOAST_TEXT: Record<string, string> = {
   "Welcome back": "You’re in. Copy it again",
   "Couldn’t save": "Couldn’t save, try again",
 };
+/** Messages that report a failure rather than a success. */
+const ERROR_TOASTS = new Set(["Couldn’t copy", "Couldn’t save"]);
 const PENDING_SAVE = "supply-pending-save";
 const PENDING_COPY = "supply-pending-copy";
 
@@ -70,39 +72,28 @@ function pack(items: Block[], n: number) {
   return cols;
 }
 
-async function copyBlock(block: Block, kit: HTMLElement) {
+/** The block as Figma clipboard HTML. Throws when it cannot be built. */
+async function buildFigmaHtml(block: Block, kit: HTMLElement): Promise<string> {
+  const { generateFromElement, inlineComputedStyles } = await import("@magicpatterns/html-to-figma");
+  // A block shown scaled down is copied at its real size.
+  const fit = (hostOf(kit) ?? kit).closest<HTMLElement>("[data-fit-inner]");
+  const scaleBefore = fit?.style.transform ?? "";
+  if (fit) fit.style.transform = "none";
+  // The converter gives a frame with no fill an opaque white one, which shows up in Figma as a
+  // white box behind blocks that only have shadows. An almost-invisible fill keeps it clear.
+  const bgBefore = kit.style.backgroundColor;
+  const clearRoot = /^(transparent|rgba\(\s*0\s*,\s*0\s*,\s*0\s*,\s*0\s*\))$/.test(getComputedStyle(kit).backgroundColor);
+  if (clearRoot) kit.style.backgroundColor = "rgba(255, 255, 255, 0.004)";
+  let inlined: string;
   try {
-    const { generateFromElement, inlineComputedStyles } = await import("@magicpatterns/html-to-figma");
-    // A block shown scaled down is copied at its real size.
-    const fit = (hostOf(kit) ?? kit).closest<HTMLElement>("[data-fit-inner]");
-    const scaleBefore = fit?.style.transform ?? "";
-    if (fit) fit.style.transform = "none";
-    // The converter gives a frame with no fill an opaque white one, which shows up in Figma as a
-    // white box behind blocks that only have shadows. An almost-invisible fill keeps it clear.
-    const bgBefore = kit.style.backgroundColor;
-    const clearRoot = /^(transparent|rgba\(\s*0\s*,\s*0\s*,\s*0\s*,\s*0\s*\))$/.test(getComputedStyle(kit).backgroundColor);
-    if (clearRoot) kit.style.backgroundColor = "rgba(255, 255, 255, 0.004)";
-    let inlined: string;
-    try {
-      inlined = inlineComputedStyles(kit);
-    } finally {
-      if (fit) fit.style.transform = scaleBefore;
-      if (clearRoot) kit.style.backgroundColor = bgBefore;
-    }
-    const clone = new DOMParser().parseFromString(inlined, "text/html").body.firstElementChild;
-    if (!clone) throw new Error("empty frame");
-    const html = await generateFromElement(clone, { topLayerName: block.name });
-    if (!navigator.clipboard?.write) throw new Error("clipboard");
-    await navigator.clipboard.write([
-      new ClipboardItem({
-        "text/html": new Blob([html], { type: "text/html" }),
-      }),
-    ]);
-    return true;
-  } catch (error) {
-    console.error(error);
-    return false;
+    inlined = inlineComputedStyles(kit);
+  } finally {
+    if (fit) fit.style.transform = scaleBefore;
+    if (clearRoot) kit.style.backgroundColor = bgBefore;
   }
+  const clone = new DOMParser().parseFromString(inlined, "text/html").body.firstElementChild;
+  if (!clone) throw new Error("empty frame");
+  return generateFromElement(clone, { topLayerName: block.name });
 }
 
 export function Site() {
@@ -134,6 +125,9 @@ export function Site() {
   const [cols, setCols] = useState(3);
   const [saved, setSaved] = useState<string[]>([]);
   const [toast, setToast] = useState<string | null>(null);
+  // The last message stays on screen while the toast fades out.
+  const lastToast = useRef("");
+  if (toast) lastToast.current = toast;
   const [copied, setCopied] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [onlySaved, setOnlySaved] = useState(false);
@@ -305,34 +299,55 @@ export function Site() {
   async function onCopy(block: Block, kit: HTMLElement | null) {
     if (!kit || busy) return;
     setBusy(block.id);
-    let gate: Awaited<ReturnType<typeof reserveCopy>>;
+    // What happened on the way, so a failure can undo exactly what was done.
+    const state: { gate: Awaited<ReturnType<typeof reserveCopy>> | null; reserved: boolean } = { gate: null, reserved: false };
+    const job = (async () => {
+      const gate = await reserveCopy();
+      state.gate = gate;
+      if (!gate.ok) throw new Error("free copies used");
+      state.reserved = true;
+      return buildFigmaHtml(block, kit);
+    })();
+    job.catch(() => {});
     try {
-      gate = await reserveCopy();
-    } catch {
-      setBusy(null);
-      setToast("Couldn’t copy");
-      return;
-    }
-    if (!gate.ok) {
-      setBusy(null);
-      setGate("copy");
-      return;
-    }
-    const ok = await copyBlock(block, kit);
-    setBusy(null);
-    if (!ok) {
+      if (!navigator.clipboard?.write || typeof ClipboardItem === "undefined") throw new Error("clipboard");
+      // The write starts now, while the click still counts, and waits for the block to be ready. Writing
+      // after the server and the converter had answered could be refused once the click had expired.
+      const blob = job.then((html) => new Blob([html], { type: "text/html" }));
+      let item: ClipboardItem;
       try {
-        await releaseCopy();
+        item = new ClipboardItem({ "text/html": blob });
       } catch {
-        /* the copy failed; the quota stays if release doesn't land */
+        item = new ClipboardItem({ "text/html": await blob });
+      }
+      await navigator.clipboard.write([item]);
+    } catch (error) {
+      setBusy(null);
+      if (state.gate && !state.gate.ok) {
+        setGate("copy");
+        return;
+      }
+      console.error(error);
+      // The copy did not reach the clipboard, so it must not count against the free copies.
+      if (state.reserved) {
+        for (let attempt = 0; attempt < 2; attempt++) {
+          try {
+            await releaseCopy();
+            break;
+          } catch {
+            /* try once more */
+          }
+        }
       }
       setToast("Couldn’t copy");
       return;
     }
+    setBusy(null);
+    const gate = state.gate;
     setCopied(block.id);
     // Count the copy for the owner's stats; a failure here must never affect the visitor.
     void recordCopyEvent({ data: { id: block.id } }).catch(() => {});
-    setToast(!gate.signedIn && gate.used >= gate.limit ? "Last free copy" : block.name);
+    setToast(gate && gate.ok && !gate.signedIn && gate.used >= gate.limit ? "Last free copy" : block.name);
     window.setTimeout(() => setCopied((curr) => (curr === block.id ? null : curr)), 1600);
   }
 
@@ -660,15 +675,20 @@ export function Site() {
 
       {auth ? <AuthModal initialMode={auth.mode} note={auth.note} onClose={() => setAuth(null)} /> : null}
 
-      <div className="toast" data-on={toast ? "true" : "false"} role="status" aria-live="polite">
-        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
-          <circle cx="8" cy="8" r="7" fill="#17181A" />
-          <path d="M5 8.2 7.1 10.2 11 6" fill="none" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" />
-        </svg>
-        {(toast && TOAST_TEXT[toast]) || "Ready for Figma"}
-        <em>
-          {toast && !TOAST_TEXT[toast] ? `· ${toast}` : ""}
-        </em>
+      <div className="toast" data-on={toast ? "true" : "false"} data-tone={ERROR_TOASTS.has(lastToast.current) ? "error" : "ok"} role="status" aria-live="polite">
+        {ERROR_TOASTS.has(lastToast.current) ? (
+          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+            <circle cx="8" cy="8" r="7" fill="#17181A" />
+            <path d="M8 4.6v4.2M8 11.2v.2" fill="none" stroke="#fff" strokeWidth="1.7" strokeLinecap="round" />
+          </svg>
+        ) : (
+          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+            <circle cx="8" cy="8" r="7" fill="#17181A" />
+            <path d="M5 8.2 7.1 10.2 11 6" fill="none" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" />
+          </svg>
+        )}
+        {TOAST_TEXT[lastToast.current] || "Ready for Figma"}
+        <em>{lastToast.current && !TOAST_TEXT[lastToast.current] ? `· ${lastToast.current}` : ""}</em>
       </div>
     </div>
   );

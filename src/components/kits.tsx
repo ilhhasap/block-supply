@@ -401,14 +401,14 @@ function TextField() {
 
 function SearchField() {
   return (
-    <Box layer="Search field" root fill dir="row" align="center" gap={10} pad="0 16px" h={52} radius={999} bg={WASH}>
+    <Box layer="Search field" root fill dir="row" align="center" gap={10} pad="0 16px" h={52} radius={999} bg={PAPER} border={`1px solid ${LINE}`}>
       <SearchIcon />
       <Box layer="Query" dir="row" align="center" style={{ flex: 1 }}>
         <Txt size={15} weight={400} color={MUTE}>
           Search components
         </Txt>
       </Box>
-      <Txt size={12} weight={500} color="#8A8984">
+      <Txt size={12} weight={500} color={MUTE}>
         Ctrl K
       </Txt>
     </Box>
