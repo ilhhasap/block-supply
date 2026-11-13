@@ -2483,7 +2483,7 @@ button.free-ghost {
 
 /* Card copy button: Figma mark on the left, then the label. */
 .copy {
-  gap: 7px;
+  gap: 6px;
 }
 
 .copy svg {
