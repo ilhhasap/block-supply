@@ -17,6 +17,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SiteChar123PageChar125RouteImport } from './routes/_site.{-$page}'
+import { Route as ApiQcRouteImport } from './routes/api/qc'
 import { Route as SiteBIdRouteImport } from './routes/_site.b.$id'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
@@ -59,6 +60,11 @@ const SiteChar123PageChar125Route = SiteChar123PageChar125RouteImport.update({
   path: '/{-$page}',
   getParentRoute: () => SiteRoute,
 } as any)
+const ApiQcRoute = ApiQcRouteImport.update({
+  id: '/api/qc',
+  path: '/api/qc',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SiteBIdRoute = SiteBIdRouteImport.update({
   id: '/b/$id',
   path: '/b/$id',
@@ -79,6 +85,7 @@ export interface FileRoutesByFullPath {
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/{-$page}': typeof SiteChar123PageChar125Route
+  '/api/qc': typeof ApiQcRoute
   '/b/$id': typeof SiteBIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
@@ -91,6 +98,7 @@ export interface FileRoutesByTo {
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/{-$page}': typeof SiteChar123PageChar125Route
+  '/api/qc': typeof ApiQcRoute
   '/b/$id': typeof SiteBIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
@@ -104,6 +112,7 @@ export interface FileRoutesById {
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_site/{-$page}': typeof SiteChar123PageChar125Route
+  '/api/qc': typeof ApiQcRoute
   '/_site/b/$id': typeof SiteBIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
@@ -118,6 +127,7 @@ export interface FileRouteTypes {
     | '/robots.txt'
     | '/sitemap.xml'
     | '/{-$page}'
+    | '/api/qc'
     | '/b/$id'
     | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
@@ -130,6 +140,7 @@ export interface FileRouteTypes {
     | '/robots.txt'
     | '/sitemap.xml'
     | '/{-$page}'
+    | '/api/qc'
     | '/b/$id'
     | '/api/auth/$'
   id:
@@ -142,6 +153,7 @@ export interface FileRouteTypes {
     | '/robots.txt'
     | '/sitemap.xml'
     | '/_site/{-$page}'
+    | '/api/qc'
     | '/_site/b/$id'
     | '/api/auth/$'
   fileRoutesById: FileRoutesById
@@ -154,6 +166,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  ApiQcRoute: typeof ApiQcRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
@@ -215,6 +228,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SiteChar123PageChar125RouteImport
       parentRoute: typeof SiteRoute
     }
+    '/api/qc': {
+      id: '/api/qc'
+      path: '/api/qc'
+      fullPath: '/api/qc'
+      preLoaderRoute: typeof ApiQcRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_site/b/$id': {
       id: '/_site/b/$id'
       path: '/b/$id'
@@ -252,6 +272,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  ApiQcRoute: ApiQcRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport

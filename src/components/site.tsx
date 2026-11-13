@@ -12,6 +12,7 @@ import { Editor } from "@/components/editor";
 import { AuthModal } from "@/components/auth-modal";
 import { Footer } from "@/components/footer";
 import { MimicPage } from "@/components/mimic";
+import { QcLayer, QcToggle } from "@/components/qc";
 import { hostOf, isControlEvent, kitIn } from "@/components/shadow-host";
 
 const LOCAL_SAVED = "block-supply-saved";
@@ -569,6 +570,7 @@ export function Site() {
                           <div className="stage">
                             <BlockView id={block.id} />
                           </div>
+                          <QcLayer blockId={block.id} blockName={block.name} where="card" />
                           <span className="cname">{block.name}</span>
                           <button
                             type="button"
@@ -613,6 +615,8 @@ export function Site() {
           onShare={() => void onShare(editingBlock)}
         />
       ) : null}
+
+      <QcToggle />
 
       <button
         type="button"

@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { groupOf, type Block } from "@/data/blocks";
 import { BlockView } from "@/components/block-view";
 import { kitIn } from "@/components/shadow-host";
+import { QcLayer } from "@/components/qc";
 
 type Tune = {
   fill: "light" | "dark";
@@ -270,7 +271,7 @@ export function Editor({
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       // An account modal opened over the editor takes the Escape first.
-      if (event.key === "Escape" && !document.querySelector(".auth-overlay")) requestClose();
+      if (event.key === "Escape" && !document.querySelector(".auth-overlay, [data-qc-pop]")) requestClose();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -311,6 +312,7 @@ export function Editor({
         <div className="bench-frame" ref={frameRef}>
           <BlockView id={block.id} />
         </div>
+        <QcLayer blockId={block.id} blockName={block.name} where="editor" />
         {tune && baseRef.current && JSON.stringify(tune) !== JSON.stringify(baseRef.current) ? (
           <button
             type="button"
