@@ -38,6 +38,19 @@ function Logo({ size = 32 }: { size?: number }) {
   );
 }
 
+/** The Figma mark, drawn in the button's own colour. */
+function FigmaMark() {
+  return (
+    <svg width="10" height="15" viewBox="0 0 38 57" aria-hidden="true" fill="currentColor">
+      <path d="M19 28.5a9.5 9.5 0 1 1 19 0 9.5 9.5 0 0 1-19 0Z" />
+      <path d="M0 47.5A9.5 9.5 0 0 1 9.5 38H19v9.5a9.5 9.5 0 1 1-19 0Z" />
+      <path d="M19 0v19h9.5a9.5 9.5 0 1 0 0-19H19Z" />
+      <path d="M0 9.5A9.5 9.5 0 0 0 9.5 19H19V0H9.5A9.5 9.5 0 0 0 0 9.5Z" />
+      <path d="M0 28.5A9.5 9.5 0 0 0 9.5 38H19V19H9.5A9.5 9.5 0 0 0 0 28.5Z" />
+    </svg>
+  );
+}
+
 function columnsFor(width: number) {
   if (width < 740) return 1;
   if (width < 1100) return 2;
@@ -561,13 +574,15 @@ export function Site() {
                             type="button"
                             className="copy"
                             data-on={copied === block.id ? "true" : "false"}
+                            aria-label={`Copy ${block.name} to Figma`}
                             onClick={(event) => {
                               event.stopPropagation();
                               const kit = kitIn(event.currentTarget.closest("article"));
                               void onCopy(block, kit instanceof HTMLElement ? kit : null);
                             }}
                           >
-                            {busy === block.id ? "Copying" : copied === block.id ? "Copied" : "Copy Figma"}
+                            <FigmaMark />
+                            {busy === block.id ? "Copying" : copied === block.id ? "Copied" : "Copy"}
                           </button>
                         </article>
                       ))}
