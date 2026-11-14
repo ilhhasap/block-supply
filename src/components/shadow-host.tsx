@@ -43,6 +43,13 @@ export function kitIn(container: ParentNode | null | undefined): HTMLElement | n
   return kit instanceof HTMLElement ? kit : null;
 }
 
+/** The part of the block under a screen point, found inside its shadow root. */
+export function elementAt(container: ParentNode | null | undefined, x: number, y: number): HTMLElement | null {
+  const host = container?.querySelector("[data-shadow-host]");
+  const el = host ? roots.get(host)?.elementFromPoint(x, y) : null;
+  return el instanceof HTMLElement ? el : null;
+}
+
 /** The element in the page that holds the block, for a node inside its shadow root. */
 export function hostOf(node: Node): Element | null {
   const root = node.getRootNode();

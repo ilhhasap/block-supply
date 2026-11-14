@@ -2480,3 +2480,174 @@ button.free-ghost {
   color: var(--color-ink-4);
   font-size: 13px;
 }
+
+/* Card copy button: Figma mark on the left, then the label. */
+.copy {
+  gap: 6px;
+}
+
+.copy svg {
+  flex: none;
+}
+
+/* QC comments (local review tool) */
+.qc-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.qc-layer[data-on="true"] {
+  pointer-events: auto;
+  cursor: crosshair;
+}
+
+.bench-toggle,
+.bench-save,
+.bench-reset {
+  z-index: 2;
+}
+
+.qc-pin {
+  position: absolute;
+  z-index: 3;
+  display: grid;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  place-items: center;
+  border: 2px solid #fff;
+  border-radius: 999px 999px 999px 2px;
+  background: #17181a;
+  box-shadow: 0 2px 8px rgba(23, 24, 26, 0.25);
+  color: #fff;
+  cursor: pointer;
+  font: 600 11px/1 var(--font-sans);
+  pointer-events: auto;
+  transform: translate(-50%, -100%);
+}
+
+.qc-pin[data-status="resolved"] {
+  background: #9a9a9e;
+}
+
+.qc-pin[data-status="draft"] {
+  background: #0a84ff;
+  pointer-events: none;
+}
+
+.qc-pop {
+  position: fixed;
+  z-index: 400;
+  width: 248px;
+  padding: 10px;
+  border: 1px solid rgba(23, 24, 26, 0.08);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 16px 40px rgba(23, 24, 26, 0.18);
+}
+
+.qc-text {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: 1px solid rgba(23, 24, 26, 0.1);
+  border-radius: 10px;
+  background: #f7f7f6;
+  color: var(--color-ink);
+  font: 400 13px/1.45 var(--font-sans);
+  outline: none;
+  resize: none;
+}
+
+.qc-meta {
+  margin: 0 0 6px;
+  color: var(--color-sub);
+  font-size: 11.5px;
+  line-height: 1.4;
+}
+
+.qc-reply {
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #eef6ff;
+  color: var(--color-ink-2);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.qc-reply b {
+  margin-right: 4px;
+  font-weight: 600;
+}
+
+.qc-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.qc-actions button {
+  height: 30px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: #efefee;
+  color: var(--color-ink);
+  cursor: pointer;
+  font: 500 12.5px/1 var(--font-sans);
+}
+
+.qc-actions button[data-primary="true"] {
+  background: #17181a;
+  color: #fff;
+}
+
+.qc-actions button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.qc-toggle {
+  position: fixed;
+  z-index: 300;
+  bottom: 18px;
+  left: 18px;
+  display: inline-flex;
+  height: 38px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  border: 1px solid rgba(23, 24, 26, 0.1);
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(23, 24, 26, 0.12);
+  color: var(--color-ink);
+  cursor: pointer;
+  font: 500 13px/1 var(--font-sans);
+}
+
+.qc-toggle[data-on="true"] {
+  background: #17181a;
+  color: #fff;
+}
+
+.qc-toggle b {
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(127, 127, 127, 0.2);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.qc-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #0a84ff;
+}
