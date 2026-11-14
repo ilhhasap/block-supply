@@ -17,9 +17,11 @@ Email verification: set `RESEND_API_KEY` (and `EMAIL_FROM`) to send verification
 a verified email to log in. Without the key, the link is logged to the server console and
 verification is not enforced (local dev).
 `VITE_AUTH_ENABLED=false` disables auth and uses a shared dev user.
-Owner stats page at `/admin`: set `ADMIN_EMAILS` (comma separated) to the emails allowed to open it; in
+Owner dashboard at `/admin`: set `ADMIN_EMAILS` (comma separated) to the emails allowed to open it; in
 production the account must have a verified email (sign in with Google). Everyone else gets "Page not
-found". Copies are logged to `copy_events`. Visitors and page views come from Vercel Analytics, which must be
+found". It has a date range, headline numbers against the previous period, charts, a first-copy-to-account
+funnel, per-block and per-member tables (CSV export) and the latest copies and failures. Copies are logged to
+`copy_events` and failed copies (with the browser error) to `copy_failures`. Visitors and page views come from Vercel Analytics, which must be
 enabled in the Vercel project (Analytics tab).
 QC comments (local only): run `VITE_QC_ENABLED=true npm run dev`, press "Review" (bottom left) and click
 anywhere on a card or in the editor to pin a comment; Option-click opens a card's editor. Comments are kept in
