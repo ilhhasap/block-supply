@@ -3,6 +3,7 @@ import { LIVE } from "@/components/live";
 import { VIEWS } from "@/components/kits";
 import { BLOCKS } from "@/data/blocks";
 import { kitIn, ShadowHost } from "@/components/shadow-host";
+import { generatedView, isGenerated } from "@/lib/generated";
 
 /**
  * Fits a block into its card. A block wider than the room it has (or narrower than the width it is
@@ -63,12 +64,12 @@ function Fit({ minW, noShadow, children }: { minW?: number; noShadow?: boolean; 
 
 /** Interactive version of a block when one exists, otherwise the static one. */
 export function BlockView({ id }: { id: string }) {
-  const View = LIVE[id] ?? VIEWS[id];
+  const View = LIVE[id] ?? VIEWS[id] ?? generatedView(id);
   if (!View) return null;
   const block = BLOCKS.find((item) => item.id === id);
   // Only cards carry a shadow; on every other block it is removed, on the page and in the copy.
   return (
-    <Fit minW={block?.minW} noShadow={block?.cat !== "Card"}>
+    <Fit minW={block?.minW} noShadow={!isGenerated(id) && block?.cat !== "Card"}>
       <View />
     </Fit>
   );

@@ -27,6 +27,11 @@ QC comments (local only): run `VITE_QC_ENABLED=true npm run dev`, press "Review"
 anywhere on a card or in the editor to pin a comment; Option-click opens a card's editor. Comments are kept in
 `.qc/comments.json` (git-ignored) with the block, the part under the pin and the page; a fix can be written back
 as `reply`. The `/api/qc` endpoint is a 404 outside `npm run dev`, so none of this exists in production.
+Mimic (screenshot to editable block, `/mimic`) is behind a flag: only `VITE_MIMIC_ENABLED=true` turns it on (the
+server functions answer "Not found" otherwise, so production shows "Coming soon"). It needs `ANTHROPIC_API_KEY`,
+is for signed-in visitors and limited by `MIMIC_PER_DAY` (default 3, rolling 24 hours, in `mimic_runs`). `MIMIC_MODEL`
+overrides the model (default `claude-sonnet-5-5`). Locally `MIMIC_MOCK=true` returns a stand-in block without calling
+the model. The model's HTML is rebuilt from an allow-list in `src/lib/mimic-html.ts` before it is drawn.
 Protect server functions with `authMiddleware` (`src/lib/auth/middleware.ts`).
 
 ## Notes
