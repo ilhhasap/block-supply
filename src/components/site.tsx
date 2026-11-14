@@ -6,7 +6,7 @@ import { authEnabled, signOut } from "@/lib/auth/client";
 import { releaseCopy, reserveCopy } from "@/lib/copy-gate";
 import { FREE_COPIES } from "@/lib/copy-limit";
 import { listSavedBlocks, mergeSavedBlocks, setSavedBlock } from "@/lib/saved";
-import { recordCopyEvent } from "@/lib/stats";
+import { recordCopyEvent, recordCopyFailureEvent } from "@/lib/stats";
 import { BlockView } from "@/components/block-view";
 import { Editor } from "@/components/editor";
 import { AuthModal } from "@/components/auth-modal";
@@ -328,6 +328,9 @@ export function Site() {
         return;
       }
       console.error(error);
+      // Tell the owner's dashboard which block failed and why; never let that bother the visitor.
+      const reason = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+      void recordCopyFailureEvent({ data: { id: block.id, message: reason } }).catch(() => {});
       // The copy did not reach the clipboard, so it must not count against the free copies.
       if (state.reserved) {
         for (let attempt = 0; attempt < 2; attempt++) {
@@ -477,7 +480,7 @@ export function Site() {
           {page === "pricing" ? (
             <FreePage onBrowse={goLibrary} signedIn={Boolean(currentUser)} onSignup={() => setAuth({ mode: "signup" })} />
           ) : page === "mimic" ? (
-            <MimicPage />
+            <MimicPage signedIn={Boolean(currentUser)} onLogin={() => setAuth({ mode: "login" })} onCopy={(block, kit) => void onCopy(block, kit)} busy={busy} copied={copied} />
           ) : (
             <>
               <header className="hero">

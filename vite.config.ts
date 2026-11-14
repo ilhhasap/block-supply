@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
 import type { Plugin } from "vite";
@@ -90,7 +91,11 @@ export default defineConfig(({ command, isPreview }) => ({
     port: 8081,
     strictPort: true,
   },
-  resolve: { tsconfigPaths: true },
+  resolve: {
+    tsconfigPaths: true,
+    // The Figma converter's schema compiler uses `new Function`, which the CSP forbids; see the shim.
+    alias: [{ find: /^kiwi-schema$/, replacement: fileURLToPath(new URL("./src/lib/kiwi/shim.ts", import.meta.url)) }],
+  },
   optimizeDeps: {
     exclude: ["@magicpatterns/html-to-figma"],
   },

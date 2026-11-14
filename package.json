@@ -16,11 +16,12 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "test": "node --test 'scripts/**/*.test.mjs' && node --experimental-strip-types --test src/lib/auth/sign-in-gate.test.ts src/lib/copy-cookie.test.ts src/lib/saved-ids.test.ts",
+    "test": "node --test 'scripts/**/*.test.mjs' && node --experimental-strip-types --test src/lib/auth/sign-in-gate.test.ts src/lib/copy-cookie.test.ts src/lib/saved-ids.test.ts src/components/admin/format.test.ts",
     "lint": "eslint .",
     "format": "prettier --write ."
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.8.0",
     "@electric-sql/pglite": "^0.5.4",
     "@fontsource/geist": "^5.3.0",
     "@hookform/resolvers": "^5.7.0",

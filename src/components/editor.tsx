@@ -3,6 +3,7 @@ import { groupOf, type Block } from "@/data/blocks";
 import { BlockView } from "@/components/block-view";
 import { kitIn } from "@/components/shadow-host";
 import { QcLayer } from "@/components/qc";
+import { isGenerated } from "@/lib/generated";
 
 type Tune = {
   fill: "light" | "dark";
@@ -33,6 +34,11 @@ type Snap = {
 };
 
 function blurb(block: Block) {
+  if (isGenerated(block.id))
+    return [
+      "Rebuilt from your image. Drag a bar to tune it,",
+      "then copy this version into Figma.",
+    ];
   const kind = `${block.cat.toLowerCase()} ${groupOf(block.cat) === "Sections" ? "section" : "block"}`;
   const article = "aeiou".includes(kind[0] ?? "") ? "An" : "A";
   return [
@@ -67,13 +73,89 @@ const SWAPS = PALETTE.map(([light, dark], index) => {
   const rgb = `${(n >> 16) & 255}\\s*,\\s*${(n >> 8) & 255}\\s*,\\s*${n & 255}`;
   const hex = light === "#ffffff" ? "#(?:ffffff|fff)\\b" : `${light}\\b`;
   return {
-    from: new RegExp(`${hex}|rgba?\\(\\s*${rgb}\\s*(?:,\\s*(?:1|1\\.0+))?\\s*\\)`, "gi"),
+    from: new RegExp(
+      `${hex}|rgba?\\(\\s*${rgb}\\s*(?:,\\s*(?:1|1\\.0+))?\\s*\\)`,
+      "gi",
+    ),
     mark: `§${index}§`,
     dark,
   };
 });
 
-function swapColors(value: string) {
+/** Any colour in a block built by Mimic, whatever shade the model picked, moved to the dark preview. */
+const ANY_COLOR =
+  /#[0-9a-f]{8}\b|#[0-9a-f]{6}\b|#[0-9a-f]{3}\b|rgba?\([^)]*\)/gi;
+
+function toRgba(token: string): [number, number, number, number] | null {
+  const hex = token.match(/^#([0-9a-f]{3,8})$/i)?.[1];
+  if (hex) {
+    const full = hex.length <= 4 ? [...hex].map((ch) => ch + ch).join("") : hex;
+    if (full.length !== 6 && full.length !== 8) return null;
+    const n = (i: number) => parseInt(full.slice(i, i + 2), 16);
+    return [n(0), n(2), n(4), full.length === 8 ? n(6) / 255 : 1];
+  }
+  const parts = token
+    .match(/rgba?\(([^)]*)\)/i)?.[1]
+    ?.split(/[\s,/]+/)
+    .filter(Boolean)
+    .map(parseFloat);
+  if (!parts || parts.length < 3 || parts.some(Number.isNaN)) return null;
+  return [parts[0]!, parts[1]!, parts[2]!, parts[3] ?? 1];
+}
+
+function darkenAny(token: string) {
+  const color = toRgba(token);
+  if (!color) return token;
+  const [r, g, b, alpha] = color.map((value, i) =>
+    i < 3 ? value / 255 : value,
+  ) as [number, number, number, number];
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const light = (max + min) / 2;
+  const sat = max === min ? 0 : (max - min) / (1 - Math.abs(2 * light - 1));
+  let next = light;
+  if (sat < 0.2)
+    next = 0.17 + 0.79 * (1 - light); // greys swap places: white surface to dark, ink to light
+  else if (light < 0.3)
+    next = Math.min(0.75, light + 0.4); // a dark accent must stay visible
+  else if (light > 0.75) next = 0.2 + (1 - light) * 0.6; // a pale tint becomes a deep one
+  if (next === light) return token;
+  // Same hue and saturation, new lightness.
+  const hue =
+    max === min
+      ? 0
+      : max === r
+        ? ((g - b) / (max - min) + (g < b ? 6 : 0)) / 6
+        : max === g
+          ? ((b - r) / (max - min) + 2) / 6
+          : ((r - g) / (max - min) + 4) / 6;
+  const q = next < 0.5 ? next * (1 + sat) : next + sat - next * sat;
+  const p = 2 * next - q;
+  const channel = (t: number) => {
+    const x = t < 0 ? t + 1 : t > 1 ? t - 1 : t;
+    return x < 1 / 6
+      ? p + (q - p) * 6 * x
+      : x < 1 / 2
+        ? q
+        : x < 2 / 3
+          ? p + (q - p) * (2 / 3 - x) * 6
+          : p;
+  };
+  const out =
+    sat === 0
+      ? [next, next, next]
+      : [channel(hue + 1 / 3), channel(hue), channel(hue - 1 / 3)];
+  const [R, G, B] = out.map((value) => Math.round(value * 255));
+  return alpha < 1
+    ? `rgba(${R}, ${G}, ${B}, ${Math.round(alpha * 1000) / 1000})`
+    : `#${[R, G, B]
+        .map((v) => v!.toString(16).padStart(2, "0"))
+        .join("")
+        .toUpperCase()}`;
+}
+
+function swapColors(value: string, generic = false) {
+  if (generic) return value.replace(ANY_COLOR, darkenAny);
   let out = value;
   for (const swap of SWAPS) out = out.replace(swap.from, swap.mark);
   // Ink with an alpha (shadows, hairlines) turns white with the same alpha.
@@ -197,7 +279,10 @@ function measure(kit: HTMLElement): Tune {
   const corner = Math.round(target.eff);
   // A pill needs no more than half its height; a block with other rounding (a menu inside a field)
   // does not need more than a few times what it has.
-  const cornerMax = Math.max(corner, Math.min(100, Math.ceil(target.half), Math.max(32, corner * 3)));
+  const cornerMax = Math.max(
+    corner,
+    Math.min(100, Math.ceil(target.half), Math.max(32, corner * 3)),
+  );
   const gap = Math.round(mainGap(gapsOf(kit)).value);
   return {
     fill: "light",
@@ -247,29 +332,29 @@ function restore(map: Map<HTMLElement, Snap>) {
   }
 }
 
-function retintNode(el: Element) {
+function retintNode(el: Element, generic = false) {
   const style = el.getAttribute("style");
   if (style) {
-    const next = swapColors(style);
+    const next = swapColors(style, generic);
     if (next !== style) el.setAttribute("style", next);
   }
   for (const name of ["fill", "stroke"] as const) {
     const value = el.getAttribute(name);
     if (!value || value === "none" || value === "currentColor") continue;
-    const next = swapColors(value);
+    const next = swapColors(value, generic);
     if (next !== value) el.setAttribute(name, next);
   }
 }
 
-function retint(root: Element) {
-  retintNode(root);
-  for (const el of root.querySelectorAll("*")) retintNode(el);
+function retint(root: Element, generic = false) {
+  retintNode(root, generic);
+  for (const el of root.querySelectorAll("*")) retintNode(el, generic);
 }
 
-function applyTune(kit: HTMLElement, edit: Tune, base: Tune) {
+function applyTune(kit: HTMLElement, edit: Tune, base: Tune, generic = false) {
   const originalShadow = getComputedStyle(kit).boxShadow;
   if (edit.fill === "dark") {
-    retint(kit);
+    retint(kit, generic);
     // Text that names no colour takes the page ink; on the dark canvas it must be light.
     if (!kit.style.color) kit.style.color = "#F4F4F2";
   }
@@ -333,6 +418,8 @@ export function Editor({
   onCopy: (kit: HTMLElement | null) => void;
   onShare: () => void;
 }) {
+  // Blocks Mimic builds use any colour, so their dark preview maps every shade, not a fixed palette.
+  const generic = isGenerated(block.id);
   const frameRef = useRef<HTMLDivElement>(null);
   const snapRef = useRef<Map<HTMLElement, Snap> | null>(null);
   const baseRef = useRef<Tune | null>(null);
@@ -390,9 +477,10 @@ export function Editor({
       if (fillRef.current !== "dark") return;
       observer.disconnect();
       for (const record of records) {
-        if (record.type === "attributes") retintNode(record.target as Element);
+        if (record.type === "attributes")
+          retintNode(record.target as Element, generic);
         for (const node of record.addedNodes)
-          if (node instanceof Element) retint(node);
+          if (node instanceof Element) retint(node, generic);
       }
       observer.observe(kit, options);
     });
@@ -410,13 +498,18 @@ export function Editor({
         const measured = measure(kit);
         // A gap slider that moves nothing (a lone label, parts placed by hand) is left out.
         const before = geometry(kit);
-        applyTune(kit, { ...measured, gap: measured.gap + 12 }, measured);
+        applyTune(
+          kit,
+          { ...measured, gap: measured.gap + 12 },
+          measured,
+          generic,
+        );
         measured.hasGap = geometry(kit) !== before;
         restore(snapRef.current);
         baseRef.current = measured;
         setLimits(limitsFor(measured));
         setEdit(measured);
-        applyTune(kit, measured, measured);
+        applyTune(kit, measured, measured, generic);
         watch(kit);
         return;
       }
@@ -428,7 +521,7 @@ export function Editor({
       return;
     }
     restore(snapRef.current);
-    applyTune(kit, edit ?? baseRef.current!, baseRef.current!);
+    applyTune(kit, edit ?? baseRef.current!, baseRef.current!, generic);
     watch(kit);
     // Our own writes are not changes made by the block.
     watchRef.current?.observer.takeRecords();
@@ -565,23 +658,30 @@ export function Editor({
               </svg>
             </button>
           ) : null}
-          <button
-            type="button"
-            className="bench-save"
-            data-on={saved ? "true" : "false"}
-            aria-label={saved ? `Unsave ${block.name}` : `Save ${block.name}`}
-            onClick={onSave}
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
-              <path
-                d="M4 2h8a1 1 0 0 1 1 1v12l-5-3-5 3V3a1 1 0 0 1 1-1Z"
-                fill={saved ? "currentColor" : "none"}
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
+          {isGenerated(block.id) ? null : (
+            <button
+              type="button"
+              className="bench-save"
+              data-on={saved ? "true" : "false"}
+              aria-label={saved ? `Unsave ${block.name}` : `Save ${block.name}`}
+              onClick={onSave}
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                aria-hidden="true"
+              >
+                <path
+                  d="M4 2h8a1 1 0 0 1 1 1v12l-5-3-5 3V3a1 1 0 0 1 1-1Z"
+                  fill={saved ? "currentColor" : "none"}
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          )}
         </div>
 
         <aside className="bench-panel">
@@ -658,39 +758,41 @@ export function Editor({
           ) : null}
 
           <div className="bench-actions">
-            <button type="button" className="bench-share" onClick={onShare}>
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 16 16"
-                aria-hidden="true"
-              >
-                <path
-                  d="M6 3H3v10h10V9"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M9 3h4v4"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M13 3 7 9"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-              </svg>
-              Share
-            </button>
+            {isGenerated(block.id) ? null : (
+              <button type="button" className="bench-share" onClick={onShare}>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M6 3H3v10h10V9"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M9 3h4v4"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M13 3 7 9"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                </svg>
+                Share
+              </button>
+            )}
             <button
               type="button"
               className="bench-copy"
