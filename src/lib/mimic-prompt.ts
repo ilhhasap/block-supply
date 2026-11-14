@@ -8,7 +8,8 @@ Return JSON with three fields:
 
 Rules for "html":
 1. One root element: <div class="kit" data-layer="Name">. No other class names, no <style>, no <script>, no event handlers, no links, no external images or fonts.
-2. Style everything with inline style attributes. Lay out with display:flex, flex-direction, gap, padding, align-items and justify-content. Never use position, float, grid, transform or margin for spacing, and never overlap elements.
+2. Style everything with inline style attributes. Lay out with display:flex, flex-direction, gap, padding, align-items and justify-content. Never use position, float, grid, transform or margin, and never overlap elements.
+   Spacing comes from nesting: put each group of related items in its own flex container with its own gap (a field is a label and a box with a 6px gap; the form is the fields and the button with a 20px gap). Measure the space between neighbouring items in the image and reproduce each distance with the gap or padding of the container that holds them. If a distance cannot be made that way, add an empty div with a fixed height.
 3. Give the root a fixed width in px (and a height only when the design has one). Give children width:100% when they fill their parent, otherwise let them hug their content. Use align-self:stretch for rows that fill a column.
 4. Text: font-family:Geist, sans-serif with font-size, font-weight, line-height and color on every text element, copied from the screenshot. Reproduce the text exactly, including capitalisation.
 5. Colours: read them from the image as hex. Keep border-radius, borders (1px solid colour) and box-shadow only where the image shows them.

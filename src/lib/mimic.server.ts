@@ -109,6 +109,9 @@ export async function generateMimic(userId: string, input: { image: unknown; mim
       output: response.usage.output_tokens,
       cached: response.usage.cache_read_input_tokens ?? 0,
     };
+    if (process.env.NODE_ENV !== "production") {
+      console.info(`[mimic] ${MODEL} in ${usage.input} (cached ${usage.cached}) out ${usage.output} tokens, stop ${response.stop_reason}`);
+    }
     if (response.stop_reason === "refusal") {
       await finish("failed", usage);
       throw new Error("That image could not be rebuilt. Try a different one.");

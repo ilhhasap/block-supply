@@ -82,7 +82,80 @@ const SWAPS = PALETTE.map(([light, dark], index) => {
   };
 });
 
-function swapColors(value: string) {
+/** Any colour in a block built by Mimic, whatever shade the model picked, moved to the dark preview. */
+const ANY_COLOR =
+  /#[0-9a-f]{8}\b|#[0-9a-f]{6}\b|#[0-9a-f]{3}\b|rgba?\([^)]*\)/gi;
+
+function toRgba(token: string): [number, number, number, number] | null {
+  const hex = token.match(/^#([0-9a-f]{3,8})$/i)?.[1];
+  if (hex) {
+    const full = hex.length <= 4 ? [...hex].map((ch) => ch + ch).join("") : hex;
+    if (full.length !== 6 && full.length !== 8) return null;
+    const n = (i: number) => parseInt(full.slice(i, i + 2), 16);
+    return [n(0), n(2), n(4), full.length === 8 ? n(6) / 255 : 1];
+  }
+  const parts = token
+    .match(/rgba?\(([^)]*)\)/i)?.[1]
+    ?.split(/[\s,/]+/)
+    .filter(Boolean)
+    .map(parseFloat);
+  if (!parts || parts.length < 3 || parts.some(Number.isNaN)) return null;
+  return [parts[0]!, parts[1]!, parts[2]!, parts[3] ?? 1];
+}
+
+function darkenAny(token: string) {
+  const color = toRgba(token);
+  if (!color) return token;
+  const [r, g, b, alpha] = color.map((value, i) =>
+    i < 3 ? value / 255 : value,
+  ) as [number, number, number, number];
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const light = (max + min) / 2;
+  const sat = max === min ? 0 : (max - min) / (1 - Math.abs(2 * light - 1));
+  let next = light;
+  if (sat < 0.2)
+    next = 0.17 + 0.79 * (1 - light); // greys swap places: white surface to dark, ink to light
+  else if (light < 0.3)
+    next = Math.min(0.75, light + 0.4); // a dark accent must stay visible
+  else if (light > 0.75) next = 0.2 + (1 - light) * 0.6; // a pale tint becomes a deep one
+  if (next === light) return token;
+  // Same hue and saturation, new lightness.
+  const hue =
+    max === min
+      ? 0
+      : max === r
+        ? ((g - b) / (max - min) + (g < b ? 6 : 0)) / 6
+        : max === g
+          ? ((b - r) / (max - min) + 2) / 6
+          : ((r - g) / (max - min) + 4) / 6;
+  const q = next < 0.5 ? next * (1 + sat) : next + sat - next * sat;
+  const p = 2 * next - q;
+  const channel = (t: number) => {
+    const x = t < 0 ? t + 1 : t > 1 ? t - 1 : t;
+    return x < 1 / 6
+      ? p + (q - p) * 6 * x
+      : x < 1 / 2
+        ? q
+        : x < 2 / 3
+          ? p + (q - p) * (2 / 3 - x) * 6
+          : p;
+  };
+  const out =
+    sat === 0
+      ? [next, next, next]
+      : [channel(hue + 1 / 3), channel(hue), channel(hue - 1 / 3)];
+  const [R, G, B] = out.map((value) => Math.round(value * 255));
+  return alpha < 1
+    ? `rgba(${R}, ${G}, ${B}, ${Math.round(alpha * 1000) / 1000})`
+    : `#${[R, G, B]
+        .map((v) => v!.toString(16).padStart(2, "0"))
+        .join("")
+        .toUpperCase()}`;
+}
+
+function swapColors(value: string, generic = false) {
+  if (generic) return value.replace(ANY_COLOR, darkenAny);
   let out = value;
   for (const swap of SWAPS) out = out.replace(swap.from, swap.mark);
   // Ink with an alpha (shadows, hairlines) turns white with the same alpha.
@@ -259,29 +332,29 @@ function restore(map: Map<HTMLElement, Snap>) {
   }
 }
 
-function retintNode(el: Element) {
+function retintNode(el: Element, generic = false) {
   const style = el.getAttribute("style");
   if (style) {
-    const next = swapColors(style);
+    const next = swapColors(style, generic);
     if (next !== style) el.setAttribute("style", next);
   }
   for (const name of ["fill", "stroke"] as const) {
     const value = el.getAttribute(name);
     if (!value || value === "none" || value === "currentColor") continue;
-    const next = swapColors(value);
+    const next = swapColors(value, generic);
     if (next !== value) el.setAttribute(name, next);
   }
 }
 
-function retint(root: Element) {
-  retintNode(root);
-  for (const el of root.querySelectorAll("*")) retintNode(el);
+function retint(root: Element, generic = false) {
+  retintNode(root, generic);
+  for (const el of root.querySelectorAll("*")) retintNode(el, generic);
 }
 
-function applyTune(kit: HTMLElement, edit: Tune, base: Tune) {
+function applyTune(kit: HTMLElement, edit: Tune, base: Tune, generic = false) {
   const originalShadow = getComputedStyle(kit).boxShadow;
   if (edit.fill === "dark") {
-    retint(kit);
+    retint(kit, generic);
     // Text that names no colour takes the page ink; on the dark canvas it must be light.
     if (!kit.style.color) kit.style.color = "#F4F4F2";
   }
@@ -345,6 +418,8 @@ export function Editor({
   onCopy: (kit: HTMLElement | null) => void;
   onShare: () => void;
 }) {
+  // Blocks Mimic builds use any colour, so their dark preview maps every shade, not a fixed palette.
+  const generic = isGenerated(block.id);
   const frameRef = useRef<HTMLDivElement>(null);
   const snapRef = useRef<Map<HTMLElement, Snap> | null>(null);
   const baseRef = useRef<Tune | null>(null);
@@ -402,9 +477,10 @@ export function Editor({
       if (fillRef.current !== "dark") return;
       observer.disconnect();
       for (const record of records) {
-        if (record.type === "attributes") retintNode(record.target as Element);
+        if (record.type === "attributes")
+          retintNode(record.target as Element, generic);
         for (const node of record.addedNodes)
-          if (node instanceof Element) retint(node);
+          if (node instanceof Element) retint(node, generic);
       }
       observer.observe(kit, options);
     });
@@ -422,13 +498,18 @@ export function Editor({
         const measured = measure(kit);
         // A gap slider that moves nothing (a lone label, parts placed by hand) is left out.
         const before = geometry(kit);
-        applyTune(kit, { ...measured, gap: measured.gap + 12 }, measured);
+        applyTune(
+          kit,
+          { ...measured, gap: measured.gap + 12 },
+          measured,
+          generic,
+        );
         measured.hasGap = geometry(kit) !== before;
         restore(snapRef.current);
         baseRef.current = measured;
         setLimits(limitsFor(measured));
         setEdit(measured);
-        applyTune(kit, measured, measured);
+        applyTune(kit, measured, measured, generic);
         watch(kit);
         return;
       }
@@ -440,7 +521,7 @@ export function Editor({
       return;
     }
     restore(snapRef.current);
-    applyTune(kit, edit ?? baseRef.current!, baseRef.current!);
+    applyTune(kit, edit ?? baseRef.current!, baseRef.current!, generic);
     watch(kit);
     // Our own writes are not changes made by the block.
     watchRef.current?.observer.takeRecords();
