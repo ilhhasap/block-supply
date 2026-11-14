@@ -3,6 +3,7 @@ import { groupOf, type Block } from "@/data/blocks";
 import { BlockView } from "@/components/block-view";
 import { kitIn } from "@/components/shadow-host";
 import { QcLayer } from "@/components/qc";
+import { isGenerated } from "@/lib/generated";
 
 type Tune = {
   fill: "light" | "dark";
@@ -33,6 +34,11 @@ type Snap = {
 };
 
 function blurb(block: Block) {
+  if (isGenerated(block.id))
+    return [
+      "Rebuilt from your image. Drag a bar to tune it,",
+      "then copy this version into Figma.",
+    ];
   const kind = `${block.cat.toLowerCase()} ${groupOf(block.cat) === "Sections" ? "section" : "block"}`;
   const article = "aeiou".includes(kind[0] ?? "") ? "An" : "A";
   return [
@@ -67,7 +73,10 @@ const SWAPS = PALETTE.map(([light, dark], index) => {
   const rgb = `${(n >> 16) & 255}\\s*,\\s*${(n >> 8) & 255}\\s*,\\s*${n & 255}`;
   const hex = light === "#ffffff" ? "#(?:ffffff|fff)\\b" : `${light}\\b`;
   return {
-    from: new RegExp(`${hex}|rgba?\\(\\s*${rgb}\\s*(?:,\\s*(?:1|1\\.0+))?\\s*\\)`, "gi"),
+    from: new RegExp(
+      `${hex}|rgba?\\(\\s*${rgb}\\s*(?:,\\s*(?:1|1\\.0+))?\\s*\\)`,
+      "gi",
+    ),
     mark: `§${index}§`,
     dark,
   };
@@ -197,7 +206,10 @@ function measure(kit: HTMLElement): Tune {
   const corner = Math.round(target.eff);
   // A pill needs no more than half its height; a block with other rounding (a menu inside a field)
   // does not need more than a few times what it has.
-  const cornerMax = Math.max(corner, Math.min(100, Math.ceil(target.half), Math.max(32, corner * 3)));
+  const cornerMax = Math.max(
+    corner,
+    Math.min(100, Math.ceil(target.half), Math.max(32, corner * 3)),
+  );
   const gap = Math.round(mainGap(gapsOf(kit)).value);
   return {
     fill: "light",
@@ -565,23 +577,30 @@ export function Editor({
               </svg>
             </button>
           ) : null}
-          <button
-            type="button"
-            className="bench-save"
-            data-on={saved ? "true" : "false"}
-            aria-label={saved ? `Unsave ${block.name}` : `Save ${block.name}`}
-            onClick={onSave}
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
-              <path
-                d="M4 2h8a1 1 0 0 1 1 1v12l-5-3-5 3V3a1 1 0 0 1 1-1Z"
-                fill={saved ? "currentColor" : "none"}
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
+          {isGenerated(block.id) ? null : (
+            <button
+              type="button"
+              className="bench-save"
+              data-on={saved ? "true" : "false"}
+              aria-label={saved ? `Unsave ${block.name}` : `Save ${block.name}`}
+              onClick={onSave}
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                aria-hidden="true"
+              >
+                <path
+                  d="M4 2h8a1 1 0 0 1 1 1v12l-5-3-5 3V3a1 1 0 0 1 1-1Z"
+                  fill={saved ? "currentColor" : "none"}
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          )}
         </div>
 
         <aside className="bench-panel">
@@ -658,39 +677,41 @@ export function Editor({
           ) : null}
 
           <div className="bench-actions">
-            <button type="button" className="bench-share" onClick={onShare}>
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 16 16"
-                aria-hidden="true"
-              >
-                <path
-                  d="M6 3H3v10h10V9"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M9 3h4v4"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M13 3 7 9"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-              </svg>
-              Share
-            </button>
+            {isGenerated(block.id) ? null : (
+              <button type="button" className="bench-share" onClick={onShare}>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M6 3H3v10h10V9"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M9 3h4v4"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M13 3 7 9"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                </svg>
+                Share
+              </button>
+            )}
             <button
               type="button"
               className="bench-copy"

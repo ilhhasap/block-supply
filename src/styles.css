@@ -3037,3 +3037,191 @@ button.free-ghost {
   border-radius: 999px;
   background: #0a84ff;
 }
+
+/* Mimic tool (behind VITE_MIMIC_ENABLED) */
+.mimic-tool {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 24px 0 24px;
+}
+
+.mimic-head {
+  text-align: center;
+}
+
+.mimic-head .mimic-title {
+  margin: 0;
+  font-size: 40px;
+  font-weight: 500;
+  letter-spacing: -0.48px;
+  line-height: 44px;
+}
+
+.mimic-head .mimic-sub {
+  margin: 14px auto 0;
+}
+
+.mimic-drop {
+  position: relative;
+  display: flex;
+  min-height: 220px;
+  margin-top: 28px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 24px;
+  border: 1.5px dashed rgba(23, 24, 26, 0.18);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--color-sub);
+  text-align: center;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.mimic-drop[data-over="true"] {
+  border-color: #17181a;
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.mimic-drop[data-filled="true"] {
+  border-style: solid;
+  border-color: rgba(23, 24, 26, 0.08);
+}
+
+.mimic-drop p {
+  margin: 0;
+  font-size: 15px;
+}
+
+.mimic-drop kbd {
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: rgba(23, 24, 26, 0.07);
+  font: 500 12px/1.4 var(--font-sans);
+}
+
+.mimic-drop img {
+  max-width: 100%;
+  max-height: 340px;
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(23, 24, 26, 0.12);
+}
+
+.mimic-choose {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-ink);
+  cursor: pointer;
+  font: 500 14px/1 var(--font-sans);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.mimic-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.mimic-hint {
+  flex: 1 1 300px;
+  min-width: 0;
+  height: 44px;
+  padding: 0 18px;
+  border: 1px solid rgba(23, 24, 26, 0.1);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--color-ink);
+  font: 400 15px/1 var(--font-sans);
+  outline: none;
+}
+
+.mimic-hint:focus-visible {
+  outline: 2px solid #0a84ff;
+  outline-offset: 2px;
+}
+
+.mimic-go {
+  margin-top: 0;
+  animation: none;
+  cursor: pointer;
+}
+
+.mimic-go:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.mimic-meta {
+  margin: 12px 4px 0;
+  color: var(--color-ink-4);
+  font-size: 13px;
+}
+
+.mimic-error {
+  margin: 10px 4px 0;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(23, 24, 26, 0.06);
+  color: var(--color-ink);
+  font-size: 14px;
+}
+
+.mimic-results {
+  margin-top: 36px;
+}
+
+.mimic-results h2 {
+  margin: 0 0 12px;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.mimic-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.mimic-grid .card {
+  min-height: 240px;
+}
+
+.mimic-grid .stage {
+  padding: 40px 24px 64px;
+}
+
+.mimic-x {
+  position: absolute;
+  z-index: 2;
+  top: 12px;
+  right: 12px;
+  height: 28px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.8);
+  color: var(--color-ink-3);
+  cursor: pointer;
+  font: 500 12px/1 var(--font-sans);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.mimic-grid .card:hover .mimic-x,
+.mimic-x:focus-visible {
+  opacity: 1;
+}
+
+@media (max-width: 739px) {
+  .mimic-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mimic-head .mimic-title {
+    font-size: 34px;
+  }
+}

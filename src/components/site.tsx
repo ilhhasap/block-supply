@@ -480,7 +480,7 @@ export function Site() {
           {page === "pricing" ? (
             <FreePage onBrowse={goLibrary} signedIn={Boolean(currentUser)} onSignup={() => setAuth({ mode: "signup" })} />
           ) : page === "mimic" ? (
-            <MimicPage />
+            <MimicPage signedIn={Boolean(currentUser)} onLogin={() => setAuth({ mode: "login" })} onCopy={(block, kit) => void onCopy(block, kit)} busy={busy} copied={copied} />
           ) : (
             <>
               <header className="hero">
