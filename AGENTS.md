@@ -21,6 +21,10 @@ Owner stats page at `/admin`: set `ADMIN_EMAILS` (comma separated) to the emails
 production the account must have a verified email (sign in with Google). Everyone else gets "Page not
 found". Copies are logged to `copy_events`. Visitors and page views come from Vercel Analytics, which must be
 enabled in the Vercel project (Analytics tab).
+QC comments (local only): run `VITE_QC_ENABLED=true npm run dev`, press "Review" (bottom left) and click
+anywhere on a card or in the editor to pin a comment; Option-click opens a card's editor. Comments are kept in
+`.qc/comments.json` (git-ignored) with the block, the part under the pin and the page; a fix can be written back
+as `reply`. The `/api/qc` endpoint is a 404 outside `npm run dev`, so none of this exists in production.
 Protect server functions with `authMiddleware` (`src/lib/auth/middleware.ts`).
 
 ## Notes
