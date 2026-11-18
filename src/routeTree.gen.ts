@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as SiteRouteImport } from './routes/_site'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
@@ -21,6 +22,11 @@ import { Route as ApiQcRouteImport } from './routes/api/qc'
 import { Route as SiteBIdRouteImport } from './routes/_site.b.$id'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SiteRoute = SiteRouteImport.update({
   id: '/_site',
   getParentRoute: () => rootRouteImport,
@@ -77,7 +83,7 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof SiteRouteWithChildren
+  '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
@@ -90,7 +96,7 @@ export interface FileRoutesByFullPath {
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof SiteRouteWithChildren
+  '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
@@ -104,6 +110,7 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
   '/_site': typeof SiteRouteWithChildren
   '/admin': typeof AdminRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -145,6 +152,7 @@ export interface FileRouteTypes {
     | '/api/auth/$'
   id:
     | '__root__'
+    | '/'
     | '/_site'
     | '/admin'
     | '/forgot-password'
@@ -159,6 +167,7 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
   SiteRoute: typeof SiteRouteWithChildren
   AdminRoute: typeof AdminRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
@@ -172,6 +181,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_site': {
       id: '/_site'
       path: ''
@@ -265,6 +281,7 @@ const SiteRouteChildren: SiteRouteChildren = {
 const SiteRouteWithChildren = SiteRoute._addFileChildren(SiteRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
   SiteRoute: SiteRouteWithChildren,
   AdminRoute: AdminRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,

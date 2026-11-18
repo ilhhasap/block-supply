@@ -56,7 +56,7 @@ function AdminPage() {
       <main className="adm adm-center">
         <h1>Page not found</h1>
         <p>That page does not exist.</p>
-        <Link to="/{-$page}" params={{ page: undefined }} className="adm-back">
+        <Link to="/{-$page}" params={{ page: "library" }} className="adm-back">
           Back to the blocks
         </Link>
       </main>
@@ -75,7 +75,7 @@ function AdminPage() {
           <button type="button" className="adm-link" onClick={() => setReload((n) => n + 1)}>
             Refresh
           </button>
-          <Link to="/{-$page}" params={{ page: undefined }} className="adm-back">
+          <Link to="/{-$page}" params={{ page: "library" }} className="adm-back">
             Back to the blocks
           </Link>
         </div>

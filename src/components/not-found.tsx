@@ -8,7 +8,7 @@ export function NotFound() {
       </p>
       <h1 className="nf-title">Page not found</h1>
       <p className="nf-sub">That page does not exist or has moved.</p>
-      <Link to="/{-$page}" params={{ page: undefined }} className="hero-join nf-btn">
+      <Link to="/{-$page}" params={{ page: "library" }} className="hero-join nf-btn">
         Back to the blocks
       </Link>
     </main>
